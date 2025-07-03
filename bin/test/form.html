@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Form Panel</title>
+</head>
+<body>
+    <h2>Upload Configuration</h2>
+    <form action="http://localhost:8080/upload" method="post" enctype="multipart/form-data" target="center">
+        <input type="file" name="file">
+        <button type="submit">Deploy</button>
+    </form>
+
+    <h2>Send Message to Topic</h2>
+    <form action="http://localhost:8080/publish" method="get" target="left">
+        <label for="topic">Topic:</label>
+        <input type="text" id="topic" name="topic" required><br><br>
+        <label for="value">Message:</label>
+        <input type="text" id="value" name="value" required><br><br>
+        <button type="submit">Send</button>
+    </form>
+</body>
+</html>
