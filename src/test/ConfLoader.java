@@ -7,15 +7,19 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Objects;
 
 import test.RequestParser.RequestInfo;
 
 public class ConfLoader implements Servlet {
     @Override
     public void handle(RequestInfo ri, OutputStream toClient) throws IOException {
+        System.out.println("in ConfLoader handle");
         // Assume the uploaded file is in the content as bytes, and the filename is in the parameters
         Map<String, String> params = ri.getParameters();
         String filename = params.get("filename");
+        filename = filename.replace("\"", "");
+        System.out.println("filename: " + filename);
         byte[] fileContent = ri.getContent();
         if (fileContent == null || fileContent.length == 0) {
             String response = "HTTP/1.1 400 Bad Request\r\nContent-Type: text/html\r\n\r\n" +
@@ -26,6 +30,7 @@ public class ConfLoader implements Servlet {
         try {
             Path uploadDir = Paths.get("config_files");
             Path filePath = uploadDir.resolve(filename).normalize();
+            System.out.println("filePath: " + filePath);
             
             // Prevent path traversal attacks
             if (!filePath.startsWith(uploadDir)) {
@@ -35,28 +40,33 @@ public class ConfLoader implements Servlet {
                 toClient.write(response.getBytes(StandardCharsets.UTF_8));
                 return;
             }
-
+            System.out.println("1");
             // Save file (create directory if needed)
             Files.createDirectories(uploadDir);
             Files.write(filePath, fileContent);
-
+            System.out.println("2");
             //Files.write(Paths.get(filename), fileContent);
             // Load into GenericConfig
             // Process config and generate graph
             GenericConfig config = new GenericConfig();
+            System.out.println("3");
             config.setConfFile(filePath.toString());
+            System.out.println("4");
             config.create();
+            System.out.println("5");
             //config.setConfFile(filename);
             //config.create();
             // Create the graph
             Graph graph = new Graph();
             graph.createFromTopics();
+            System.out.println("4");
             // Return graph visualization
             String html = HtmlGraphWriter.getGraphHTML(graph);
             String successResponse = "HTTP/1.1 200 OK\r\n" +
             "Content-Type: text/html\r\n\r\n" +
             html;
             toClient.write(successResponse.getBytes(StandardCharsets.UTF_8));
+            System.out.println("5");
             // Generate a simple HTML representation of the graph
             /*StringBuilder html = new StringBuilder();
             html.append("<html><body><h2>Graph Visualization</h2><table border='1'><tr><th>Node</th><th>Edges</th></tr>");
@@ -72,10 +82,10 @@ public class ConfLoader implements Servlet {
             toClient.write(response.getBytes(StandardCharsets.UTF_8));*/
         } catch (Exception e) {
             // Handle processing errors 
-            String errorMessage = "Error: " + e.getMessage()
-                .replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;");
+            String errorMessage = "Error: " + Objects.toString(e.getMessage(), "")
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;");
                 
             String response = "HTTP/1.1 500 Server Error\r\n" +
                             "Content-Type: text/html\r\n\r\n" +

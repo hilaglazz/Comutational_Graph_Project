@@ -36,6 +36,7 @@ public class MyHTTPServer extends Thread implements HTTPServer{
 
     public void addServlet(String httpCommanmd, String uri, Servlet s){
         getServletMap(httpCommanmd).put(uri, s);
+        System.out.println("Servlet added: " + httpCommanmd + " " + uri);
     }
 
     public void removeServlet(String httpCommanmd, String uri){
@@ -78,7 +79,7 @@ public class MyHTTPServer extends Thread implements HTTPServer{
                 }
             }
         }
-        
+        System.out.println("bestMatchUri: " + bestMatchUri);
         return bestMatch;
     }
 
@@ -110,9 +111,11 @@ public class MyHTTPServer extends Thread implements HTTPServer{
                 OutputStream out = client.getOutputStream()) {
             //parse the request
             RequestInfo ri = RequestParser.parseRequest(reader);
+            System.out.println("in MyHTTPServer handleClient");
             Servlet servlet = findServlet(ri.getHttpCommand(), ri.getUri());
             if (servlet != null) {
                 //handle the request
+                System.out.println("servlet: " + servlet);
                 servlet.handle(ri, out);
             } else {
                 out.write("HTTP/1.1 404 Not Found\r\n\r\n".getBytes());
