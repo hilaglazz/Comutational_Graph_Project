@@ -40,11 +40,14 @@ public class ConfLoader implements Servlet {
                 toClient.write(response.getBytes(StandardCharsets.UTF_8));
                 return;
             }
+
             System.out.println("1");
+            System.out.println("valid file path");
             // Save file (create directory if needed)
             Files.createDirectories(uploadDir);
             Files.write(filePath, fileContent);
             System.out.println("2");
+            System.out.println("fileContent: " + fileContent);
             //Files.write(Paths.get(filename), fileContent);
             // Load into GenericConfig
             // Process config and generate graph
@@ -52,6 +55,7 @@ public class ConfLoader implements Servlet {
             System.out.println("3");
             config.setConfFile(filePath.toString());
             System.out.println("4");
+
             config.create();
             System.out.println("5");
             //config.setConfFile(filename);
