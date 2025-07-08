@@ -26,6 +26,7 @@ public class RequestParser {
         // if the URI contains a query string, split it into segments and parameters
         String uri = commandParts[1];
         System.out.println("uri: " + uri);
+        // Parse URI segments and parameters
         String[] uriSegments;
         Map<String, String> parameters = new HashMap<>();
         if (uri.contains("?")) {
@@ -42,6 +43,7 @@ public class RequestParser {
         }
         else {
             uriSegments = uri.split("/");
+            uriSegments = Arrays.copyOfRange(uriSegments, 1, uriSegments.length);
         }
 
         // extract all further headers
@@ -52,7 +54,20 @@ public class RequestParser {
             if (headerParts.length == 2) {
                 headers.put(headerParts[0], headerParts[1]);
             }
+
+            // Parse additional parameters from headers
+            String[] paramParts = headerParts[1].split("; ");
+            for (String paramPart : paramParts) {
+                String[] keyValue = paramPart.split("=");
+                if (keyValue.length == 2) {
+                    parameters.put(keyValue[0], keyValue[1]);
+                } else {
+                    parameters.put(paramPart, paramPart);
+                }
+            }
         }
+
+        /*
         // additional parameters will be added to the parameters map if exists
         while ((line = reader.readLine()) != null && !line.isEmpty()) {
             //String[] keyValue = line.split("=", 2);
@@ -70,9 +85,71 @@ public class RequestParser {
                 }
             }
         }
+        */
+
         // check for Content-Length header and read the content if it exists
-        int contentLength = headers.containsKey("Content-Length") ? Integer.parseInt(headers.get("Content-Length")) : 0;
+        //int contentLength = headers.containsKey("Content-Length") ? Integer.parseInt(headers.get("Content-Length")) : 0;
         byte[] content = null;
+        String filename = null;
+        String contentType = headers.get("Content-Type");
+        if (headers.containsKey("Content-Length")) {
+            int contentLength = Integer.parseInt(headers.get("Content-Length"));
+            if (contentLength > 0) {
+                char[] contentBuffer = new char[contentLength];
+                int bytesRead = reader.read(contentBuffer, 0, contentLength);
+                if (bytesRead != contentLength) {
+                    throw new IOException("Failed to read complete content");
+                }
+                content = new String(contentBuffer).getBytes();
+                String rawContent = new String(contentBuffer);
+
+                // Enhanced multipart handling
+                if (contentType != null && contentType.startsWith("multipart/form-data")) {
+                    String boundary = "--" + contentType.split("boundary=")[1];
+                    String contentStr = new String(content);
+
+                    // Extract the actual content between boundaries
+                    String[] parts = contentStr.split(boundary);
+                    for (String part : parts) {
+                        if (part.contains("filename=")) {
+                            // Extract the filename
+                            filename = part.split("filename=")[1].split("\"")[1];
+                            parameters.put("filename", filename);
+
+                            // Extract the file content
+                            String[] contentParts = part.split("\r\n\r\n");
+                            if (contentParts.length > 1) {
+                                content = contentParts[1].trim().getBytes();
+                                System.out.println("Extracted filename: " + filename);
+                                System.out.println("Content length: " + content.length);
+                                break;
+                            }
+                        }
+
+                    }
+                } else {
+                    content = rawContent.getBytes();
+                }
+                System.out.println("content: " + new String(content));
+            }
+        }
+        /* 
+        else{
+            // read the content from the request body until an empty line is encountered
+            while ((line = reader.readLine()) != null && !line.isEmpty()) {
+                byte[] lineBytes = (line + "\n").getBytes();
+                if (content == null) {
+                    content = lineBytes;
+                } else {
+                    byte[] newContent = new byte[content.length + lineBytes.length];
+                    System.arraycopy(content, 0, newContent, 0, content.length);
+                    System.arraycopy(lineBytes, 0, newContent, content.length, lineBytes.length);
+                    content = newContent;
+                }
+            }
+        }
+        */
+        /* 
         // read the number of characters specified in the Content-Length header
         if (contentLength > 0) {
             char[] contentBuffer = new char[contentLength];
@@ -94,6 +171,7 @@ public class RequestParser {
                 }
             }
         }
+        */
         System.out.println("exit parseRequest");
         // create and return the RequestInfo object
         return new RequestInfo(method, uri, uriSegments, parameters, content);
