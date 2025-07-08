@@ -2,6 +2,67 @@
 <html>
 <head>
     <title>Form Panel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h2 {
+            color: #333;
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+        form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        input[type="text"],
+        input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #3399ff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2673c5;
+        }
+        /* Matching the graph color scheme */
+        #upload-form button {
+            background-color: #ff9933;
+        }
+        #upload-form button:hover {
+            background-color: #e68a2e;
+        }
+        #publish-form button {
+            background-color: #3399ff;
+        }
+        #publish-form button:hover {
+            background-color: #2673c5;
+        }
+    </style>
 </head>
 <body>
     <h2>Upload Configuration</h2>
