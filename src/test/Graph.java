@@ -3,6 +3,7 @@ package test;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
 import test.TopicManagerSingleton.TopicManager;
 
 public class Graph extends ArrayList<Node>{
