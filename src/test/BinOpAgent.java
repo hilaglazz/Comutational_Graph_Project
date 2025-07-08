@@ -3,6 +3,7 @@ package test;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BinaryOperator;
+
 import test.TopicManagerSingleton.TopicManager;
 
 public class BinOpAgent implements Agent {
