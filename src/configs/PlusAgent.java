@@ -1,4 +1,4 @@
-package test;
+/*package test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -78,3 +78,65 @@ public class PlusAgent implements Agent {
     }
 	
 }
+    */
+package configs;
+
+import test.Agent;
+import test.Message;
+import test.TopicManagerSingleton;
+import test.TopicManagerSingleton.TopicManager;
+
+
+
+public class PlusAgent implements Agent {
+	private double x = 0;
+    private double y = 0;
+    private final String[] subs;
+    private final String[] pubs;
+
+    public PlusAgent(String[] subs, String[] pubs) {
+        this.subs = subs;
+        this.pubs = pubs;
+        
+        // Subscribe to first two input topics
+        TopicManagerSingleton.get().getTopic(subs[0]).subscribe(this);
+        if (subs.length > 1) {
+            TopicManagerSingleton.get().getTopic(subs[1]).subscribe(this);
+        }
+    }
+
+    @Override
+    public String getName() {
+        return "PlusAgent";
+    }
+
+    @Override
+    public void reset() {
+        x = 0;
+        y = 0;
+    }
+
+    @Override
+    public void callback(String topic, Message msg) {
+        if (subs[0].equals(topic)) {
+            x = msg.asDouble;
+        } else if (subs.length > 1 && subs[1].equals(topic)) {
+            y = msg.asDouble;
+        }
+        
+        if (!Double.isNaN(x) && !Double.isNaN(y)) {
+            double result = x + y;
+            TopicManagerSingleton.get().getTopic(pubs[0]).publish(new Message(result));
+        }
+    }
+
+    @Override
+    public void close() {
+        TopicManagerSingleton.get().getTopic(subs[0]).unsubscribe(this);
+        if (subs.length > 1) {
+            TopicManagerSingleton.get().getTopic(subs[1]).unsubscribe(this);
+        }
+    }
+}
+
+
