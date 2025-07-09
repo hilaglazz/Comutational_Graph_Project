@@ -78,6 +78,7 @@ public class IncAgent implements Agent {
         this.subs = subs;
         this.pubs = pubs;
         TopicManagerSingleton.get().getTopic(subs[0]).subscribe(this);
+        TopicManagerSingleton.get().getTopic(pubs[0]).addPublisher(this);
     }
 
     @Override

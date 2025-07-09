@@ -84,7 +84,6 @@ package configs;
 import test.Agent;
 import test.Message;
 import test.TopicManagerSingleton;
-import test.TopicManagerSingleton.TopicManager;
 
 
 
@@ -103,6 +102,7 @@ public class PlusAgent implements Agent {
         if (subs.length > 1) {
             TopicManagerSingleton.get().getTopic(subs[1]).subscribe(this);
         }
+        TopicManagerSingleton.get().getTopic(pubs[0]).addPublisher(this);
     }
 
     @Override

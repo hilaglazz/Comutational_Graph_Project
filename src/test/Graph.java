@@ -17,6 +17,7 @@ public class Graph extends ArrayList<Node>{
         return false;
     }
     public void createFromTopics() {
+        System.out.println("in create from topics");
         TopicManager topicManager = TopicManagerSingleton.get();
         // Create a map to store nodes by their names
         Map<String, Node> nodeMap = new HashMap<>(); 
@@ -26,6 +27,7 @@ public class Graph extends ArrayList<Node>{
             String nodeName = "T" + topic.name;
             // Check if the node already exists in the map, and create it if it doesn't
             nodeMap.computeIfAbsent(nodeName, Node::new); 
+            System.out.println("add " + nodeName + "to node map");
         }
 
         // Create nodes for agents and add edges from topics to agents
@@ -37,6 +39,7 @@ public class Graph extends ArrayList<Node>{
                 Node agentNode = nodeMap.computeIfAbsent(agentNodeName, Node::new); 
                 // Add edge from topic to agent
                 topicNode.addEdge(agentNode); 
+                System.out.println("added edge from " + topicNode + "to " + agentNodeName);
             }
         }
 
@@ -50,8 +53,10 @@ public class Graph extends ArrayList<Node>{
                 String topicNodeName = "T" + topic.name;
                 // Get the topic node
                 Node topicNode = nodeMap.get(topicNodeName);
+                System.out.println("found topic " + topicNodeName + "in nodemap");
                 // Add edge from agent to topic 
                 agentNode.addEdge(topicNode); 
+                System.out.println("added edge from " + agentNode + "to " + topicNode);
             }
         }
 
