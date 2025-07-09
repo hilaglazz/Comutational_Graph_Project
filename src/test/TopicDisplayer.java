@@ -8,8 +8,10 @@ import java.util.Map;
 import test.RequestParser.RequestInfo;
 
 public class TopicDisplayer implements Servlet {
+
     @Override
     public void handle(RequestInfo ri, OutputStream toClient) throws IOException {
+        System.out.println("in TopicDisplayer handle");
         System.out.println("Debug: Handling new request."); // Debug
         Map<String, String> params = ri.getParameters();
         String topicName = params.get("topic");
@@ -32,9 +34,15 @@ public class TopicDisplayer implements Servlet {
         topic.publish(msg);
         System.out.println("Debug: Message '" + value + "' published to topic '" + topicName + "'."); // Debug
         // Show the topic and value sent (latest value)
-        String html = "<html><body>"
+        String html = "<html><head><style>"
+            + "body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }"
+            + "h2 { color: #333; margin-top: 0; padding-bottom: 10px; border-bottom: 1px solid #ccc; }"
+            + "table { background-color: white; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); width: 100%; border-collapse: collapse; }"
+            + "th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }"
+            + "th { background-color: #3399ff; color: white; }"
+            + "</style></head><body>"
             + "<h2>Message Published</h2>"
-            + "<table border='1'><tr><th>Topic</th><th>Latest Value</th></tr>"
+            + "<table><tr><th>Topic</th><th>Latest Value</th></tr>"
             + "<tr><td>" + escapeHtml(topicName) + "</td><td>" + escapeHtml(value) + "</td></tr>"
             + "</table></body></html>";
         String response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + html;
