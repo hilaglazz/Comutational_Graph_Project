@@ -10,23 +10,29 @@ public class Node {
     private String name;
     private List<Node> edges;
     private Message msg;
-    
+    private Double value;
+    private String operation;
+
     public	Node(String name) {
     	this.name = name;
         this.edges = new ArrayList<>();
-    	this.msg = new Message(""); //////////need to understand what to put here
+    	this.msg = new Message(""); 
+        this.value = null;
+        this.operation = null;
     }
     
     //Getters
     public String getName() { return this.name; }
     public List<Node> getEdges(){ return this.edges; }
     public Message getMsg() { return this.msg; }
-    
+    public Double getValue() { return this.value; }
+    public String getOperation() { return this.operation; }
     //Setters
     public void setName(String name) { this.name = name; }
     public void setEdges(List<Node> edges) { this.edges = edges; }
     public void setMsg(Message msg) { this.msg = msg; }
-    
+    public void setValue(Double value) { this.value = value; }
+    public void setOperation(String operation) { this.operation = operation; }
     public void addEdge(Node n) {
     	this.edges.add(n);
     }
@@ -77,5 +83,23 @@ public class Node {
     public int hashCode() {
         // Use the hash code of the name field
         return name.hashCode(); 
+    }
+
+    public boolean isTopic() {
+        return name.startsWith("T");
+    }
+
+    public boolean isAgent() {
+        return name.startsWith("A");
+    }
+
+    public String getNodeType() {
+        return isTopic() ? "topic" : "agent";
+    } 
+    public String getNodeValue() {
+        return isTopic() ? String.valueOf(value) : operation;
+    }  
+    public String getNodeOperation() {
+        return isAgent() ? operation : null;
     }
 }
