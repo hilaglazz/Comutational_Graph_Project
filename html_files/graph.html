@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Graph Visualization</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: Arial;
+            margin: 0;
+            padding: 15px;
+            overflow: hidden;
+        }
+        #graph-wrapper {
+            width: 100%;
+            height: 80vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #graph-container {
+            width: 100%;
+            height: 100%;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+        #graph-svg {
+            width: 100%;
+            height: 100%;
+        }
+        .topic {
+            fill: #ff9933;
+            stroke: #cc6600;
+            stroke-width: 2;
+            rx: 5;
+            ry: 5;
+        }
+        .agent {
+            fill: #3399ff;
+            stroke: #0066cc;
+            stroke-width: 2;
+        }
+        .node text {
+            font-size: 14px;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            pointer-events: none;
+            font-weight: bold;
+        }
+        .link {
+            stroke: #666;
+            stroke-width: 2;
+            fill: none;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Computational Graph</h2>
+    <div id="graph-wrapper">
+        <div id="graph-container">
+            <svg id="graph-svg"></svg>
+        </div>
+    </div>
+
+    <script>
+        // Data will be injected here by Java
+        /*DATA_PLACEHOLDER*/
+        
+        function renderGraph(data) {
+            const container = d3.select("#graph-container");
+            const svg = d3.select("#graph-svg");
+            
+            // Clear previous content
+            svg.html("");
+            
+            if (!data || !data.nodes || data.nodes.length === 0) {
+                container.html("<p>No graph data available</p>");
+                return;
+            }
+
+            const width = container.node().clientWidth;
+            const height = container.node().clientHeight;
+
+            // Create a group for all graph elements that will be transformed by zoom
+            const g = svg.append("g");
+
+            // Add arrow marker
+            g.append("defs").append("marker")
+                .attr("id", "arrowhead")
+                .attr("viewBox", "0 -5 10 10")
+                .attr("refX", 10)  // Set so arrowhead tip is at the line's endpoint
+                .attr("refY", 0)
+                .attr("markerWidth", 6)
+                .attr("markerHeight", 6)
+                .attr("orient", "auto")
+                .append("path")
+                .attr("d", "M0,-5L10,0L0,5")
+                .attr("fill", "#666");
+
+            // Calculate initial positions to center the graph
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            // Initialize positions for better initial layout
+            data.nodes.forEach((node, i) => {
+                node.x = centerX + (Math.random() - 0.5) * 100;
+                node.y = centerY + (Math.random() - 0.5) * 100;
+            });
+
+            // Force simulation with stronger centering and collision
+            const simulation = d3.forceSimulation(data.nodes)
+                .force("link", d3.forceLink(data.links).id(d => d.id).distance(150))
+                .force("charge", d3.forceManyBody().strength(-500))
+                .force("center", d3.forceCenter(centerX, centerY))
+                .force("collision", d3.forceCollide().radius(50));
+
+            // Draw links
+            const link = g.append("g")
+                .selectAll("line")
+                .data(data.links)
+                .enter().append("line")
+                .attr("class", "link")
+                .attr("marker-end", "url(#arrowhead)");
+
+            // Draw nodes
+            const node = g.append("g")
+                .selectAll("g")
+                .data(data.nodes)
+                .enter().append("g")
+                .call(d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended));
+
+            // Add shapes based on node type with larger sizes
+            node.each(function(d) {
+                const g = d3.select(this);
+
+                // Add text first (invisible for measurement)
+                const text = g.append("text")
+                    .attr("dy", ".35em")
+                    .style("font-size", "14px")
+                    .style("font-family", "Arial") // Ensure font matches CSS
+                    .attr("dominant-baseline", "middle")
+                    .text(d.id);
+
+                // Measure text size
+                const bbox = text.node().getBBox();
+                const paddingX = 20;
+                const paddingY = 10;
+
+                if (d.type === "agent") {
+                    // Use ellipse for agents, centered at (0,0)
+                    const rx = bbox.width / 2 + paddingX;
+                    const ry = bbox.height / 2 + paddingY;
+                    g.insert("ellipse", "text")
+                        .attr("class", "agent")
+                        .attr("rx", rx)
+                        .attr("ry", ry);
+                    d.rx = rx;
+                    d.ry = ry;
+                } else {
+                    // Rectangle for topics, centered at (0,0)
+                    const width = bbox.width + 2 * paddingX;
+                    const height = bbox.height + 2 * paddingY;
+                    g.insert("rect", "text")
+                        .attr("class", "topic")
+                        .attr("width", width)
+                        .attr("height", height)
+                        .attr("rx", 5)
+                        .attr("ry", 5)
+                        .attr("x", -width / 2)
+                        .attr("y", -height / 2);
+                    d.width = width;
+                    d.height = height;
+                }
+
+                // Center the text perfectly in both axes
+                text
+                  .attr("x", 0)
+                  .attr("y", 0)
+                  .attr("text-anchor", "middle")
+                  .attr("dominant-baseline", "middle");
+            });
+
+            // Helper function to get intersection point with node shape
+            function getEdgePoint(source, target) {
+                const dx = target.x - source.x;
+                const dy = target.y - source.y;
+                let tx, ty;
+
+                if (target.type === "agent" && target.rx && target.ry) {
+                    // Ellipse intersection (parametric, centered at (0,0))
+                    const rx = target.rx;
+                    const ry = target.ry;
+                    const len = Math.sqrt((dx * dx) / (rx * rx) + (dy * dy) / (ry * ry));
+                    tx = target.x - (dx / len);
+                    ty = target.y - (dy / len);
+                } else if (target.type !== "agent" && target.width && target.height) {
+                    // Rectangle intersection (robust, centered at (0,0))
+                    const w = target.width / 2;
+                    const h = target.height / 2;
+                    if (Math.abs(dy) * w < Math.abs(dx) * h) {
+                        // Intersection with left/right
+                        tx = target.x + (dx > 0 ? -w : w);
+                        ty = target.y - w * dy / dx;
+                    } else {
+                        // Intersection with top/bottom
+                        tx = target.x - h * dx / dy;
+                        ty = target.y + (dy > 0 ? -h : h);
+                    }
+                } else {
+                    // Fallback: center
+                    tx = target.x;
+                    ty = target.y;
+                }
+                // Move the endpoint outward by the arrowhead length (10 units)
+                const arrowLen = 10;
+                const ddx = tx - source.x;
+                const ddy = ty - source.y;
+                const dlen = Math.sqrt(ddx * ddx + ddy * ddy);
+                const txOut = tx + (ddx / dlen) * arrowLen;
+                const tyOut = ty + (ddy / dlen) * arrowLen;
+                return { x: txOut, y: tyOut };
+            }
+
+            simulation.on("tick", () => {
+                link.attr("x1", d => {
+                        const p = getEdgePoint(d.target, d.source);
+                        return p.x;
+                    })
+                    .attr("y1", d => {
+                        const p = getEdgePoint(d.target, d.source);
+                        return p.y;
+                    })
+                    .attr("x2", d => {
+                        const p = getEdgePoint(d.source, d.target);
+                        return p.x;
+                    })
+                    .attr("y2", d => {
+                        const p = getEdgePoint(d.source, d.target);
+                        return p.y;
+                    });
+                node.attr("transform", d => `translate(${d.x},${d.y})`);
+            });
+
+            function dragstarted(event, d) {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                d.fx = d.x;
+                d.fy = d.y;
+            }
+            function dragged(event, d) {
+                d.fx = event.x;
+                d.fy = event.y;
+            }
+            function dragended(event, d) {
+                if (!event.active) simulation.alphaTarget(0);
+                d.fx = null;
+                d.fy = null;
+            }
+
+            // Add zoom/pan functionality with proper bounds
+            const zoom = d3.zoom()
+                .scaleExtent([0.1, 4])  // Wider zoom range
+                .on("zoom", (event) => {
+                    g.attr("transform", event.transform);
+                });
+
+            svg.call(zoom);
+
+            // Calculate bounds after simulation stabilizes
+            simulation.on("end", () => {
+                let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+                
+                data.nodes.forEach(node => {
+                    minX = Math.min(minX, node.x);
+                    maxX = Math.max(maxX, node.x);
+                    minY = Math.min(minY, node.y);
+                    maxY = Math.max(maxY, node.y);
+                });
+
+                // Add padding to bounds
+                const padding = 100;
+                minX -= padding;
+                maxX += padding;
+                minY -= padding;
+                maxY += padding;
+
+                // Calculate initial zoom to fit graph
+                const graphWidth = maxX - minX;
+                const graphHeight = maxY - minY;
+                const scale = 0.9 / Math.max(graphWidth / width, graphHeight / height);
+                const translateX = width / 2 - scale * (minX + graphWidth / 2);
+                const translateY = height / 2 - scale * (minY + graphHeight / 2);
+
+                // Apply initial transform
+                svg.call(zoom.transform, d3.zoomIdentity
+                    .translate(translateX, translateY)
+                    .scale(scale));
+            });
+        }
+
+        // Render the graph with injected data
+        if (typeof graphData !== 'undefined') {
+            renderGraph(graphData);
+        } else {
+            document.getElementById("graph-container").innerHTML = "<p>Graph data not loaded</p>";
+        }
+    </script>
+</body>
+</html>
