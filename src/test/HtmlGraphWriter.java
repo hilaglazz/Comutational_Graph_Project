@@ -1,15 +1,108 @@
 package test;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class HtmlGraphWriter {
+    private static final String GRAPH_TEMPLATE_PATH = "html_files/graph.html";
+    
     public static String getGraphHTML(Graph g) {
         if (g == null || g.isEmpty()) {
-            System.out.println("Debug: No graph loaded."); // Debug
             return "<html><body><h2>No graph loaded</h2></body></html>";
         }
-        StringBuilder html = new StringBuilder();
-        html.append("<!DOCTYPE html><html><head>")
+
+        try {
+            // 1. Load template
+            String template = new String(Files.readAllBytes(Paths.get(GRAPH_TEMPLATE_PATH)));
+            
+            // 2. Prepare graph data
+            Map<String, Object> graphData = prepareGraphData(g);
+            
+            // 3. Inject data into template
+            return injectDataIntoTemplate(template, graphData);
+            
+        } catch (IOException e) {
+            System.err.println("Error loading graph template: " + e.getMessage());
+            return "<html><body><h2>Error loading graph template</h2></body></html>";
+        }
+    }
+
+    private static Map<String, Object> prepareGraphData(Graph g) {
+        Map<String, Object> data = new HashMap<>();
+        
+        List<Map<String, Object>> nodes = new ArrayList<>();
+        List<Map<String, String>> links = new ArrayList<>();
+        
+        for (Node node : g) {
+            Map<String, Object> nodeData = new HashMap<>();
+            nodeData.put("id", node.getName());
+            nodeData.put("type", node.getName().startsWith("T") ? "topic" : "agent");
+            nodes.add(nodeData);
+            
+            for (Node edge : node.getEdges()) {
+                Map<String, String> link = new HashMap<>();
+                link.put("source", node.getName());
+                link.put("target", edge.getName());
+                links.add(link);
+            }
+        }
+        
+        data.put("nodes", nodes);
+        data.put("links", links);
+        return data;
+    }
+
+    private static String injectDataIntoTemplate(String template, Map<String, Object> data) {
+        // Convert data to JSON string
+        String jsonData = "const graphData = " + toJson(data) + ";";
+        
+        // Replace the placeholder
+        return template.replace("/*DATA_PLACEHOLDER*/", jsonData);
+    }
+
+    private static String toJson(Object obj) {
+        if (obj instanceof Map) {
+            Map<?, ?> map = (Map<?, ?>) obj;
+            StringBuilder sb = new StringBuilder("{");
+            boolean first = true;
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                if (!first) sb.append(",");
+                sb.append("\"").append(entry.getKey()).append("\":").append(toJson(entry.getValue()));
+                first = false;
+            }
+            return sb.append("}").toString();
+        } else if (obj instanceof Collection) {
+            Collection<?> coll = (Collection<?>) obj;
+            StringBuilder sb = new StringBuilder("[");
+            boolean first = true;
+            for (Object item : coll) {
+                if (!first) sb.append(",");
+                sb.append(toJson(item));
+                first = false;
+            }
+            return sb.append("]").toString();
+        } else if (obj instanceof String) {
+            return "\"" + escapeJson(obj.toString()) + "\"";
+        } else if (obj instanceof Number || obj instanceof Boolean) {
+            return obj.toString();
+        } else {
+            return "\"" + escapeJson(obj.toString()) + "\"";
+        }
+    }
+
+    private static String escapeJson(String str) {
+        return str.replace("\\", "\\\\")
+                 .replace("\"", "\\\"")
+                 .replace("\b", "\\b")
+                 .replace("\f", "\\f")
+                 .replace("\n", "\\n")
+                 .replace("\r", "\\r")
+                 .replace("\t", "\\t");
+    }
+}
+        /*html.append("<!DOCTYPE html><html><head>")
         .append("<title>Graph Visualization</title>")
         .append("<style>")
         .append("  .topic { fill: #ffcc99; stroke: #ff9933; stroke-width: 2; }")
@@ -90,3 +183,4 @@ public class HtmlGraphWriter {
         return html.toString();
     }
 }
+    */
