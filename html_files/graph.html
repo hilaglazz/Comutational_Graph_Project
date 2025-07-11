@@ -276,35 +276,31 @@
             svg.call(zoom);
 
             // Calculate bounds after simulation stabilizes
-            simulation.on("end", () => {
-                let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-                
-                data.nodes.forEach(node => {
-                    minX = Math.min(minX, node.x);
-                    maxX = Math.max(maxX, node.x);
-                    minY = Math.min(minY, node.y);
-                    maxY = Math.max(maxY, node.y);
-                });
-
-                // Add padding to bounds
-                const padding = 100;
-                minX -= padding;
-                maxX += padding;
-                minY -= padding;
-                maxY += padding;
-
-                // Calculate initial zoom to fit graph
-                const graphWidth = maxX - minX;
-                const graphHeight = maxY - minY;
-                const scale = 0.9 / Math.max(graphWidth / width, graphHeight / height);
-                const translateX = width / 2 - scale * (minX + graphWidth / 2);
-                const translateY = height / 2 - scale * (minY + graphHeight / 2);
-
-                // Apply initial transform
-                svg.call(zoom.transform, d3.zoomIdentity
-                    .translate(translateX, translateY)
-                    .scale(scale));
-            });
+            // simulation.on("end", () => {
+            //     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            //     data.nodes.forEach(node => {
+            //         minX = Math.min(minX, node.x);
+            //         maxX = Math.max(maxX, node.x);
+            //         minY = Math.min(minY, node.y);
+            //         maxY = Math.max(maxY, node.y);
+            //     });
+            //     // Add padding to bounds
+            //     const padding = 100;
+            //     minX -= padding;
+            //     maxX += padding;
+            //     minY -= padding;
+            //     maxY += padding;
+            //     // Calculate initial zoom to fit graph
+            //     const graphWidth = maxX - minX;
+            //     const graphHeight = maxY - minY;
+            //     const scale = 0.9 / Math.max(graphWidth / width, graphHeight / height);
+            //     const translateX = width / 2 - scale * (minX + graphWidth / 2);
+            //     const translateY = height / 2 - scale * (minY + graphHeight / 2);
+            //     // Apply initial transform
+            //     svg.call(zoom.transform, d3.zoomIdentity
+            //         .translate(translateX, translateY)
+            //         .scale(scale));
+            // });
         }
 
         // Render the graph with injected data
