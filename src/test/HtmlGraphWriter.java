@@ -39,6 +39,13 @@ public class HtmlGraphWriter {
             Map<String, Object> nodeData = new HashMap<>();
             nodeData.put("id", node.getName());
             nodeData.put("type", node.getName().startsWith("T") ? "topic" : "agent");
+            // Add label without prefix
+            String name = node.getName();
+            if (name.startsWith("T") || name.startsWith("A")) {
+                nodeData.put("label", name.substring(1));
+            } else {
+                nodeData.put("label", name);
+            }
             nodes.add(nodeData);
             
             for (Node edge : node.getEdges()) {

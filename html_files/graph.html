@@ -149,7 +149,7 @@
                     .style("font-size", "14px")
                     .style("font-family", "Arial") // Ensure font matches CSS
                     .attr("dominant-baseline", "middle")
-                    .text(d.id);
+                    .text(d.label); // Use label instead of id
 
                 // Measure text size
                 const bbox = text.node().getBBox();

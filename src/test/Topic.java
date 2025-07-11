@@ -7,6 +7,8 @@ public class Topic {
     public ArrayList<Agent> subs = new ArrayList<>();
     public ArrayList<Agent> pubs = new ArrayList<>();
     
+    private Message latestMessage = null;
+    
     Topic(String name){
         this.name=name;
     }
@@ -19,6 +21,7 @@ public class Topic {
     }
 
     public void publish(Message m){
+    	this.latestMessage = m; // Update latest message
     	for (Agent a: subs)
     		a.callback(this.name, m);
     }
@@ -30,4 +33,12 @@ public class Topic {
     public void removePublisher(Agent a){
     	this.pubs.remove(a);
     }
+
+    public Message getLatestMessage() {
+        return latestMessage;
+    }
+
+    //public void setLatestMessage(Message m) {
+    //    this.latestMessage = m;
+    //}
 }

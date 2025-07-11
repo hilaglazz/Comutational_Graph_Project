@@ -66,7 +66,6 @@ package configs;
 import test.Agent;
 import test.Message;
 import test.TopicManagerSingleton;
-import test.TopicManagerSingleton.TopicManager;
 
 
 public class IncAgent implements Agent {

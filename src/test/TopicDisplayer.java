@@ -33,7 +33,20 @@ public class TopicDisplayer implements Servlet {
         Message msg = new Message(value);
         topic.publish(msg);
         System.out.println("Debug: Message '" + value + "' published to topic '" + topicName + "'."); // Debug
-        // Show the topic and value sent (latest value)
+        // Show a table with all topics and their latest value
+        StringBuilder tableRows = new StringBuilder();
+        for (Topic t : tm.getTopics()) {
+            String latestValue = "";
+            Message latestMsg = t.getLatestMessage();
+            if (latestMsg != null && latestMsg.asText != null) {
+                latestValue = escapeHtml(latestMsg.asText);
+            }
+            tableRows.append("<tr><td>")
+                .append(escapeHtml(t.name))
+                .append("</td><td>")
+                .append(latestValue)
+                .append("</td></tr>");
+        }
         String html = "<html><head><style>"
             + "body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }"
             + "h2 { color: #333; margin-top: 0; padding-bottom: 10px; border-bottom: 1px solid #ccc; }"
@@ -41,9 +54,9 @@ public class TopicDisplayer implements Servlet {
             + "th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }"
             + "th { background-color: #3399ff; color: white; }"
             + "</style></head><body>"
-            + "<h2>Message Published</h2>"
+            + "<h2>Topics Table</h2>"
             + "<table><tr><th>Topic</th><th>Latest Value</th></tr>"
-            + "<tr><td>" + escapeHtml(topicName) + "</td><td>" + escapeHtml(value) + "</td></tr>"
+            + tableRows.toString()
             + "</table></body></html>";
         String response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + html;
         System.out.println("Debug: Sending HTTP 200 OK response."); // Debug
