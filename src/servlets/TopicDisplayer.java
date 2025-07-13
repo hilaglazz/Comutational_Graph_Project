@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 import graph.Message;
 import graph.Topic;
@@ -11,65 +13,178 @@ import graph.TopicManagerSingleton;
 import server.RequestParser.RequestInfo;
 
 public class TopicDisplayer implements Servlet {
+    private static final Logger LOGGER = Logger.getLogger(TopicDisplayer.class.getName());
+    private static final int MAX_TOPIC_NAME_LENGTH = 100;
+    private static final int MAX_VALUE_LENGTH = 1000;
+    private static final int MAX_TOPICS_DISPLAY = 100;
 
     @Override
     public void handle(RequestInfo ri, OutputStream toClient) throws IOException {
-        System.out.println("in TopicDisplayer handle");
-        System.out.println("Debug: Handling new request."); // Debug
-        Map<String, String> params = ri.getParameters();
-        String topicName = params.get("topic");
-        String value = params.get("value");
-        System.out.println("Debug: Extracted parameters - topicName: " + topicName + ", value: " + value); // Debug
-        
-        // Handle refresh request
-        if ("refresh".equals(topicName)) {
-            // Just show the current values without publishing
-            showTopicsTable(toClient);
+        if (ri == null) {
+            LOGGER.severe("RequestInfo is null");
+            sendErrorResponse(toClient, 400, "Bad Request", "Invalid request");
             return;
         }
         
-        if (topicName == null || value == null) {
-            System.out.println("Debug: Missing topic or value parameter. Sending 400 Bad Request."); // Debug
-            String response = "HTTP/1.1 400 Bad Request\r\nContent-Type: text/html\r\n\r\n" +
-                "<html><body><h2>Missing topic or value parameter.</h2></body></html>";
-            toClient.write(response.getBytes(StandardCharsets.UTF_8));
-            return;
+        if (toClient == null) {
+            LOGGER.severe("OutputStream is null");
+            throw new IllegalArgumentException("OutputStream cannot be null");
         }
-        // Decode in case of URL encoding
-        //topicName = URLDecoder.decode(topicName, "UTF-8");
-        //value = URLDecoder.decode(value, "UTF-8");
-        // Publish the value to the topic
-        TopicManagerSingleton.TopicManager tm = TopicManagerSingleton.get();
-        Topic topic = tm.getTopic(topicName);
-        Message msg = new Message(value);
-        topic.publish(msg);
-        System.out.println("Debug: Message '" + value + "' published to topic '" + topicName + "'."); // Debug
         
-        // Show the updated topics table
-        showTopicsTable(toClient);
+        LOGGER.fine("TopicDisplayer handling request: " + ri.getHttpCommand() + " " + ri.getUri());
+        
+        try {
+            Map<String, String> params = ri.getParameters();
+            if (params == null) {
+                LOGGER.warning("Parameters map is null");
+                sendErrorResponse(toClient, 400, "Bad Request", "Invalid request parameters");
+                return;
+            }
+            
+            String topicName = params.get("topic");
+            String value = params.get("value");
+            
+            LOGGER.fine("Extracted parameters - topicName: " + topicName + ", value: " + value);
+            
+            // Handle refresh request
+            if ("refresh".equals(topicName)) {
+                LOGGER.fine("Handling refresh request");
+                showTopicsTable(toClient);
+                return;
+            }
+            
+            // Validate parameters for publish request
+            if (topicName == null || value == null) {
+                LOGGER.warning("Missing topic or value parameter");
+                sendErrorResponse(toClient, 400, "Bad Request", "Missing topic or value parameter");
+                return;
+            }
+            
+            // Validate parameter lengths
+            if (topicName.length() > MAX_TOPIC_NAME_LENGTH) {
+                LOGGER.warning("Topic name too long: " + topicName.length());
+                sendErrorResponse(toClient, 400, "Bad Request", "Topic name too long (max " + MAX_TOPIC_NAME_LENGTH + " characters)");
+                return;
+            }
+            
+            if (value.length() > MAX_VALUE_LENGTH) {
+                LOGGER.warning("Value too long: " + value.length());
+                sendErrorResponse(toClient, 400, "Bad Request", "Value too long (max " + MAX_VALUE_LENGTH + " characters)");
+                return;
+            }
+            
+            // Validate topic name format
+            if (!isValidTopicName(topicName)) {
+                LOGGER.warning("Invalid topic name format: " + topicName);
+                sendErrorResponse(toClient, 400, "Bad Request", "Invalid topic name format");
+                return;
+            }
+            
+            // Publish the value to the topic
+            try {
+                TopicManagerSingleton.TopicManager tm = TopicManagerSingleton.get();
+                if (tm == null) {
+                    LOGGER.severe("TopicManager is null");
+                    sendErrorResponse(toClient, 500, "Internal Server Error", "Topic manager not available");
+                    return;
+                }
+                
+                // Get or create the topic (handles topics that don't appear in the graph)
+                Topic topic = tm.getTopic(topicName);
+                if (topic == null) {
+                    LOGGER.warning("Failed to get or create topic: " + topicName);
+                    sendErrorResponse(toClient, 500, "Internal Server Error", "Failed to get or create topic: " + escapeHtml(topicName));
+                    return;
+                }
+                
+                Message msg = new Message(value);
+                topic.publish(msg);
+                LOGGER.info("Message '" + value + "' published to topic '" + topicName + "'");
+                
+                // Show the updated topics table
+                showTopicsTable(toClient);
+                
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, "Error publishing message to topic: " + topicName, e);
+                sendErrorResponse(toClient, 500, "Internal Server Error", "Failed to publish message");
+            }
+            
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Unexpected error in TopicDisplayer", e);
+            sendErrorResponse(toClient, 500, "Internal Server Error", "Unexpected server error");
+        }
+    }
+    
+    private boolean isValidTopicName(String topicName) {
+        if (topicName == null || topicName.trim().isEmpty()) {
+            return false;
+        }
+        
+        // Check for valid characters (alphanumeric, underscore, hyphen)
+        return topicName.matches("^[a-zA-Z0-9_-]+$");
     }
     
     private void showTopicsTable(OutputStream toClient) throws IOException {
-        TopicManagerSingleton.TopicManager tm = TopicManagerSingleton.get();
-        // Show a table with all topics and their latest value
-        StringBuilder tableRows = new StringBuilder();
-        for (Topic t : tm.getTopics()) {
-            String latestValue = "0";
-            String cssClass = "empty-value";
-            Message latestMsg = t.getLatestMessage();
-            if (latestMsg != null && latestMsg.asText != null) {
-                latestValue = escapeHtml(latestMsg.asText);
-                cssClass = "value-cell";
+        try {
+            TopicManagerSingleton.TopicManager tm = TopicManagerSingleton.get();
+            if (tm == null) {
+                LOGGER.severe("TopicManager is null in showTopicsTable");
+                sendErrorResponse(toClient, 500, "Internal Server Error", "Topic manager not available");
+                return;
             }
-            tableRows.append("<tr><td>")
-                .append(escapeHtml(t.name))
-                .append("</td><td class='")
-                .append(cssClass)
-                .append("'>")
-                .append(latestValue)
-                .append("</td></tr>");
+            
+            // Show a table with all topics and their latest value
+            StringBuilder tableRows = new StringBuilder();
+            int topicCount = 0;
+            
+            for (Topic t : tm.getTopics()) {
+                if (t == null) {
+                    LOGGER.warning("Found null topic, skipping");
+                    continue;
+                }
+                
+                if (topicCount >= MAX_TOPICS_DISPLAY) {
+                    LOGGER.warning("Too many topics, limiting display to " + MAX_TOPICS_DISPLAY);
+                    break;
+                }
+                
+                String latestValue = "0";
+                String cssClass = "empty-value";
+                Message latestMsg = t.getLatestMessage();
+                
+                if (latestMsg != null && latestMsg.asText != null) {
+                    latestValue = escapeHtml(latestMsg.asText);
+                    cssClass = "value-cell";
+                }
+                
+                String topicName = t.name != null ? escapeHtml(t.name) : "Unknown";
+                
+                tableRows.append("<tr><td>")
+                    .append(topicName)
+                    .append("</td><td class='")
+                    .append(cssClass)
+                    .append("'>")
+                    .append(latestValue)
+                    .append("</td></tr>");
+                
+                topicCount++;
+            }
+            
+            String html = generateTopicsTableHtml(tableRows.toString());
+            String response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + html;
+            toClient.write(response.getBytes(StandardCharsets.UTF_8));
+            toClient.flush();
+            
+            LOGGER.fine("Topics table displayed with " + topicCount + " topics");
+            
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error generating topics table", e);
+            sendErrorResponse(toClient, 500, "Internal Server Error", "Failed to generate topics table");
         }
-        String html = "<html><head><style>"
+    }
+    
+    private String generateTopicsTableHtml(String tableRows) {
+        return "<html><head><style>"
             + "html, body { height: 100%; }"
             + "body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background: none; height: 100%; min-height: 100%; }"
             + ".container { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-radius: 15px; padding: 10px 10px 0 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.2); height: 100%; }"
@@ -87,25 +202,60 @@ public class TopicDisplayer implements Servlet {
             + "<div class='container'>"
             + "<div class='table-container'>"
             + "<table><tr><th>Topic Name</th><th>Current Value</th></tr>"
-            + tableRows.toString()
+            + tableRows
             + "</table></div>"
             + "<div class='status-bar'>"
             + "<span class='status-indicator'></span>"
             + "Real-time topic values updated successfully"
             + "</div>"
             + "</div></body></html>";
-        String response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + html;
-        toClient.write(response.getBytes(StandardCharsets.UTF_8));
     }
 
     private String escapeHtml(String s) {
         if (s == null) return "";
-        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-                .replace("\"", "&quot;").replace("'", "&#39;");
+        
+        // Limit length to prevent XSS attacks
+        if (s.length() > MAX_VALUE_LENGTH) {
+            s = s.substring(0, MAX_VALUE_LENGTH) + "...";
+        }
+        
+        return s.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
+    }
+    
+    private void sendErrorResponse(OutputStream toClient, int statusCode, String statusText, String message) throws IOException {
+        try {
+            String html = String.format(
+                "<html><body><h1>%d %s</h1><p>%s</p></body></html>",
+                statusCode, statusText, escapeHtml(message)
+            );
+            
+            String response = String.format(
+                "HTTP/1.1 %d %s\r\n" +
+                "Content-Type: text/html\r\n" +
+                "Content-Length: %d\r\n" +
+                "\r\n" +
+                "%s",
+                statusCode, statusText, html.getBytes(StandardCharsets.UTF_8).length, html
+            );
+            
+            toClient.write(response.getBytes(StandardCharsets.UTF_8));
+            toClient.flush();
+            
+            LOGGER.fine("Error response sent: " + statusCode + " " + statusText);
+            
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Failed to send error response", e);
+            throw e;
+        }
     }
 
     @Override
     public void close() throws IOException {
+        LOGGER.fine("TopicDisplayer servlet closed");
         // Nothing to close
     }
 } 

@@ -73,7 +73,6 @@ public class MyHTTPServer extends Thread implements HTTPServer{
         try {
             getServletMap(httpCommand).put(uri, s);
             LOGGER.info("Servlet added: " + httpCommand + " " + uri);
-            System.out.println("Servlet added: " + httpCommand + " " + uri);
         } catch (IllegalArgumentException e) {
             LOGGER.severe("Failed to add servlet: " + e.getMessage());
             throw e;
@@ -157,7 +156,6 @@ public class MyHTTPServer extends Thread implements HTTPServer{
             }
             
             LOGGER.fine("Best match URI: " + bestMatchUri);
-            System.out.println("bestMatchUri: " + bestMatchUri);
             return bestMatch;
             
         } catch (IllegalArgumentException e) {
@@ -219,13 +217,11 @@ public class MyHTTPServer extends Thread implements HTTPServer{
             }
             
             LOGGER.fine("Handling request: " + ri.getHttpCommand() + " " + ri.getUri());
-            System.out.println("in MyHTTPServer handleClient");
             
             Servlet servlet = findServlet(ri.getHttpCommand(), ri.getUri());
             if (servlet != null) {
                 // Handle the request
                 LOGGER.fine("Found servlet: " + servlet.getClass().getSimpleName());
-                System.out.println("servlet: " + servlet);
                 try {
                     servlet.handle(ri, out);
                 } catch (Exception e) {

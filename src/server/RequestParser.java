@@ -24,11 +24,9 @@ public class RequestParser {
         }
         
         LOGGER.fine("Starting request parsing");
-        System.out.println("in parseRequest");
         
         // Read and validate the first line (HTTP command)
         String httpCommand = reader.readLine();
-        System.out.println("httpCommand: " + httpCommand);
         
         if (httpCommand == null) {
             LOGGER.warning("End of stream reached while reading HTTP command");
@@ -65,7 +63,6 @@ public class RequestParser {
         
         // Extract and validate URI
         String uri = commandParts[1];
-        System.out.println("uri: " + uri);
         
         if (uri == null || uri.trim().isEmpty()) {
             throw new IOException("Invalid URI: " + uri);
@@ -196,7 +193,6 @@ public class RequestParser {
                     }
                     
                     LOGGER.fine("Content length: " + content.length);
-                    System.out.println("content: " + new String(content));
                     
                 } catch (IOException e) {
                     throw new IOException("Failed to read content: " + e.getMessage(), e);
@@ -205,7 +201,6 @@ public class RequestParser {
         }
         
         LOGGER.fine("Request parsing completed successfully");
-        System.out.println("exit parseRequest");
         
         // Create and return the RequestInfo object
         return new RequestInfo(method, uri, uriSegments, parameters, content);
