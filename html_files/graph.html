@@ -2,18 +2,24 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Graph Visualization</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
+        html, body {
+            height: 100%;
+        }
         body {
-            font-family: Arial;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: none;
             margin: 0;
-            padding: 15px;
+            padding: 0;
+            height: 100%;
             overflow: hidden;
         }
         #graph-wrapper {
             width: 100%;
-            height: 80vh;
+            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -21,57 +27,230 @@
         #graph-container {
             width: 100%;
             height: 100%;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background: #f9f9f9;
-            margin: 0 auto;
+            border: none;
+            border-radius: 0;
+            background: none;
+            margin: 0;
             overflow: hidden;
+            position: relative;
         }
         #graph-svg {
             width: 100%;
             height: 100%;
         }
+        
         .topic {
-            fill: #ff9933;
-            stroke: #cc6600;
-            stroke-width: 2;
-            rx: 5;
-            ry: 5;
+            fill: #ff6b6b;
+            stroke: #ee5a52;
+            stroke-width: 3;
+            rx: 8;
+            ry: 8;
+            filter: drop-shadow(0 4px 8px rgba(255,107,107,0.3));
+            transition: all 0.3s ease;
         }
+        
+        .topic:hover {
+            fill: #ff5252;
+            stroke: #d32f2f;
+            stroke-width: 4;
+            filter: drop-shadow(0 6px 12px rgba(255,107,107,0.4));
+        }
+        
         .agent {
-            fill: #3399ff;
-            stroke: #0066cc;
-            stroke-width: 2;
+            fill: #4ecdc4;
+            stroke: #26a69a;
+            stroke-width: 3;
+            filter: drop-shadow(0 4px 8px rgba(78,205,196,0.3));
+            transition: all 0.3s ease;
         }
+        
+        .agent:hover {
+            fill: #26d0ce;
+            stroke: #00838f;
+            stroke-width: 4;
+            filter: drop-shadow(0 6px 12px rgba(78,205,196,0.4));
+        }
+        
         .node text {
             font-size: 14px;
             text-anchor: middle;
             dominant-baseline: middle;
             pointer-events: none;
+            font-weight: 600;
+            fill: #2c3e50;
+        }
+        
+        .node-value {
+            font-size: 12px;
+            fill: #e74c3c;
             font-weight: bold;
         }
-        .link {
-            stroke: #666;
-            stroke-width: 2;
-            fill: none;
+        
+        .node-expression {
+            font-size: 11px;
+            fill: #27ae60;
+            font-style: italic;
         }
-        h2 {
-            text-align: center;
-            margin-bottom: 15px;
+        
+        .link {
+            stroke: #7f8c8d;
+            stroke-width: 2.5;
+            fill: none;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+        
+        .link:hover {
+            stroke: #34495e;
+            stroke-width: 3.5;
+            opacity: 1;
+        }
+        
+
+        
+        .controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .control-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .control-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        
+        .legend-symbol {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border-radius: 4px;
+        }
+        
+        .legend-topic {
+            background: #ff6b6b;
+        }
+        
+        .legend-agent {
+            background: #4ecdc4;
+            border-radius: 50%;
+        }
+        
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            font-size: 18px;
+            color: #7f8c8d;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin-right: 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .stats {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            font-size: 12px;
+        }
+        
+        .stat-item {
+            margin: 5px 0;
+            color: #2c3e50;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            color: #3498db;
         }
     </style>
 </head>
 <body>
-    <h2>Computational Graph</h2>
     <div id="graph-wrapper">
         <div id="graph-container">
             <svg id="graph-svg"></svg>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="resetZoom()">🔄 Reset View</button>
+                <button class="control-btn" onclick="toggleAnimation()">⏸️ Toggle Animation</button>
+                <button class="control-btn" onclick="exportGraph()">💾 Export</button>
+            </div>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-symbol legend-topic"></div>
+                    <span>Topics (Data Storage)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-symbol legend-agent"></div>
+                    <span>Agents (Operations)</span>
+                </div>
+            </div>
+            
+            <div class="stats" id="stats">
+                <div class="stat-item">Nodes: <span class="stat-value" id="nodeCount">0</span></div>
+                <div class="stat-item">Links: <span class="stat-value" id="linkCount">0</span></div>
+                <div class="stat-item">Topics: <span class="stat-value" id="topicCount">0</span></div>
+                <div class="stat-item">Agents: <span class="stat-value" id="agentCount">0</span></div>
+            </div>
         </div>
     </div>
 
     <script>
         // Data will be injected here by Java
         /*DATA_PLACEHOLDER*/
+        
+        let simulation;
+        let isAnimating = true;
         
         function renderGraph(data) {
             const container = d3.select("#graph-container");
@@ -81,9 +260,12 @@
             svg.html("");
             
             if (!data || !data.nodes || data.nodes.length === 0) {
-                container.html("<p>No graph data available</p>");
+                container.html("<div class='loading'><div class='spinner'></div>No graph data available</div>");
                 return;
             }
+
+            // Update statistics
+            updateStats(data);
 
             const width = container.node().clientWidth;
             const height = container.node().clientHeight;
@@ -95,14 +277,14 @@
             g.append("defs").append("marker")
                 .attr("id", "arrowhead")
                 .attr("viewBox", "0 -5 10 10")
-                .attr("refX", 10)  // Set so arrowhead tip is at the line's endpoint
+                .attr("refX", 12)
                 .attr("refY", 0)
-                .attr("markerWidth", 6)
-                .attr("markerHeight", 6)
+                .attr("markerWidth", 8)
+                .attr("markerHeight", 8)
                 .attr("orient", "auto")
                 .append("path")
                 .attr("d", "M0,-5L10,0L0,5")
-                .attr("fill", "#666");
+                .attr("fill", "#7f8c8d");
 
             // Calculate initial positions to center the graph
             const centerX = width / 2;
@@ -115,11 +297,11 @@
             });
 
             // Force simulation with stronger centering and collision
-            const simulation = d3.forceSimulation(data.nodes)
-                .force("link", d3.forceLink(data.links).id(d => d.id).distance(150))
-                .force("charge", d3.forceManyBody().strength(-500))
+            simulation = d3.forceSimulation(data.nodes)
+                .force("link", d3.forceLink(data.links).id(d => d.id).distance(180))
+                .force("charge", d3.forceManyBody().strength(-600))
                 .force("center", d3.forceCenter(centerX, centerY))
-                .force("collision", d3.forceCollide().radius(50));
+                .force("collision", d3.forceCollide().radius(60));
 
             // Draw links
             const link = g.append("g")
@@ -134,6 +316,7 @@
                 .selectAll("g")
                 .data(data.nodes)
                 .enter().append("g")
+                .attr("class", "node")
                 .call(d3.drag()
                     .on("start", dragstarted)
                     .on("drag", dragged)
@@ -147,14 +330,14 @@
                 const text = g.append("text")
                     .attr("dy", ".35em")
                     .style("font-size", "14px")
-                    .style("font-family", "Arial") // Ensure font matches CSS
+                    .style("font-family", "Segoe UI, Tahoma, Geneva, Verdana, sans-serif")
                     .attr("dominant-baseline", "middle")
-                    .text(d.label); // Use label instead of id
+                    .text(d.label);
 
                 // Measure text size
                 const bbox = text.node().getBBox();
-                const paddingX = 20;
-                const paddingY = 10;
+                const paddingX = 25;
+                const paddingY = 15;
 
                 if (d.type === "agent") {
                     // Use ellipse for agents, centered at (0,0)
@@ -174,20 +357,41 @@
                         .attr("class", "topic")
                         .attr("width", width)
                         .attr("height", height)
-                        .attr("rx", 5)
-                        .attr("ry", 5)
+                        .attr("rx", 8)
+                        .attr("ry", 8)
                         .attr("x", -width / 2)
                         .attr("y", -height / 2);
                     d.width = width;
                     d.height = height;
                 }
 
-                // Center the text perfectly in both axes
+                // Center the main text
                 text
-                  .attr("x", 0)
-                  .attr("y", 0)
-                  .attr("text-anchor", "middle")
-                  .attr("dominant-baseline", "middle");
+                    .attr("x", 0)
+                    .attr("y", 0)
+                    .attr("text-anchor", "middle")
+                    .attr("dominant-baseline", "middle");
+
+                // Add value display for topics
+                // (REMOVED: do not show topic values)
+                // if (d.type === "topic" && d.hasValue) {
+                //     g.append("text")
+                //         .attr("class", "node-value")
+                //         .attr("x", 0)
+                //         .attr("y", d.height / 2 + 20)
+                //         .attr("text-anchor", "middle")
+                //         .text(d.displayValue);
+                // }
+
+                // Add mathematical expression for agents
+                if (d.type === "agent" && d.mathematicalExpression) {
+                    g.append("text")
+                        .attr("class", "node-expression")
+                        .attr("x", 0)
+                        .attr("y", d.ry + 20)
+                        .attr("text-anchor", "middle")
+                        .text(d.mathematicalExpression);
+                }
             });
 
             // Helper function to get intersection point with node shape
@@ -197,32 +401,30 @@
                 let tx, ty;
 
                 if (target.type === "agent" && target.rx && target.ry) {
-                    // Ellipse intersection (parametric, centered at (0,0))
+                    // Ellipse intersection
                     const rx = target.rx;
                     const ry = target.ry;
                     const len = Math.sqrt((dx * dx) / (rx * rx) + (dy * dy) / (ry * ry));
                     tx = target.x - (dx / len);
                     ty = target.y - (dy / len);
                 } else if (target.type !== "agent" && target.width && target.height) {
-                    // Rectangle intersection (robust, centered at (0,0))
+                    // Rectangle intersection
                     const w = target.width / 2;
                     const h = target.height / 2;
                     if (Math.abs(dy) * w < Math.abs(dx) * h) {
-                        // Intersection with left/right
                         tx = target.x + (dx > 0 ? -w : w);
                         ty = target.y - w * dy / dx;
                     } else {
-                        // Intersection with top/bottom
                         tx = target.x - h * dx / dy;
                         ty = target.y + (dy > 0 ? -h : h);
                     }
                 } else {
-                    // Fallback: center
                     tx = target.x;
                     ty = target.y;
                 }
-                // Move the endpoint outward by the arrowhead length (10 units)
-                const arrowLen = 10;
+                
+                // Move the endpoint outward by the arrowhead length
+                const arrowLen = 12;
                 const ddx = tx - source.x;
                 const ddy = ty - source.y;
                 const dlen = Math.sqrt(ddx * ddx + ddy * ddy);
@@ -266,48 +468,103 @@
                 d.fy = null;
             }
 
-            // Add zoom/pan functionality with proper bounds
+            // Add zoom/pan functionality
             const zoom = d3.zoom()
-                .scaleExtent([0.1, 4])  // Wider zoom range
+                .scaleExtent([0.1, 5])
                 .on("zoom", (event) => {
                     g.attr("transform", event.transform);
                 });
 
             svg.call(zoom);
+        }
 
-            // Calculate bounds after simulation stabilizes
-            // simulation.on("end", () => {
-            //     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-            //     data.nodes.forEach(node => {
-            //         minX = Math.min(minX, node.x);
-            //         maxX = Math.max(maxX, node.x);
-            //         minY = Math.min(minY, node.y);
-            //         maxY = Math.max(maxY, node.y);
-            //     });
-            //     // Add padding to bounds
-            //     const padding = 100;
-            //     minX -= padding;
-            //     maxX += padding;
-            //     minY -= padding;
-            //     maxY += padding;
-            //     // Calculate initial zoom to fit graph
-            //     const graphWidth = maxX - minX;
-            //     const graphHeight = maxY - minY;
-            //     const scale = 0.9 / Math.max(graphWidth / width, graphHeight / height);
-            //     const translateX = width / 2 - scale * (minX + graphWidth / 2);
-            //     const translateY = height / 2 - scale * (minY + graphHeight / 2);
-            //     // Apply initial transform
-            //     svg.call(zoom.transform, d3.zoomIdentity
-            //         .translate(translateX, translateY)
-            //         .scale(scale));
-            // });
+        function updateStats(data) {
+            const topics = data.nodes.filter(n => n.type === 'topic').length;
+            const agents = data.nodes.filter(n => n.type === 'agent').length;
+            
+            document.getElementById('nodeCount').textContent = data.nodes.length;
+            document.getElementById('linkCount').textContent = data.links.length;
+            document.getElementById('topicCount').textContent = topics;
+            document.getElementById('agentCount').textContent = agents;
+        }
+
+        // Control functions
+        function resetZoom() {
+            const svg = d3.select("#graph-svg");
+            if (svg.node()) {
+                svg.transition().duration(750).call(
+                    d3.zoom().transform,
+                    d3.zoomIdentity
+                );
+            }
+        }
+
+        function toggleAnimation() {
+            isAnimating = !isAnimating;
+            if (simulation) {
+                if (isAnimating) {
+                    simulation.alpha(1).restart();
+                } else {
+                    simulation.stop();
+                }
+            }
+            // Update button text
+            const btn = document.querySelector('.control-btn:nth-child(2)');
+            if (btn) {
+                btn.textContent = isAnimating ? '⏸️ Pause Animation' : '▶️ Resume Animation';
+            }
+        }
+
+        function exportGraph() {
+            try {
+                const svg = d3.select("#graph-svg");
+                if (svg.node()) {
+                    const svgData = new XMLSerializer().serializeToString(svg.node());
+                    const svgBlob = new Blob([svgData], {type: "image/svg+xml;charset=utf-8"});
+                    const svgUrl = URL.createObjectURL(svgBlob);
+                    const downloadLink = document.createElement("a");
+                    downloadLink.href = svgUrl;
+                    downloadLink.download = "computational-graph.svg";
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    
+                    // Show success message
+                    showNotification('Graph exported successfully!', 'success');
+                }
+            } catch (error) {
+                showNotification('Export failed: ' + error.message, 'error');
+            }
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: 500;
+                z-index: 10000;
+                background: ${type === 'success' ? '#27ae60' : '#e74c3c'};
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
         }
 
         // Render the graph with injected data
         if (typeof graphData !== 'undefined') {
             renderGraph(graphData);
         } else {
-            document.getElementById("graph-container").innerHTML = "<p>Graph data not loaded</p>";
+            document.getElementById("graph-container").innerHTML = 
+                "<div class='loading'><div class='spinner'></div>Graph data not loaded</div>";
         }
     </script>
 </body>

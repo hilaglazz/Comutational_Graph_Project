@@ -14,6 +14,16 @@ import test.RequestParser.RequestInfo;
 public class ConfLoader implements Servlet {
     @Override
     public void handle(RequestInfo ri, OutputStream toClient) throws IOException {
+        // --- NEW: Serve GET /graph for live graph refresh ---
+        if ("GET".equals(ri.getHttpCommand()) && "/graph".equals(ri.getUri())) {
+            Graph graph = new Graph();
+            graph.createFromTopics();
+            String html = HtmlGraphWriter.getGraphHTML(graph);
+            String response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + html;
+            toClient.write(response.getBytes(StandardCharsets.UTF_8));
+            return;
+        }
+        // --- END NEW ---
         System.out.println("in ConfLoader handle");
         // Assume the uploaded file is in the content as bytes, and the filename is in the parameters
         Map<String, String> params = ri.getParameters();
