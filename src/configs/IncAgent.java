@@ -63,9 +63,9 @@ public class IncAgent implements Agent {
 */
 package configs;
 
-import test.Agent;
-import test.Message;
-import test.TopicManagerSingleton;
+import graph.Agent;
+import graph.Message;
+import graph.TopicManagerSingleton;
 
 
 public class IncAgent implements Agent {
