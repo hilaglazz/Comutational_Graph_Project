@@ -14,8 +14,8 @@ import server.RequestParser.RequestInfo;
 
 public class TopicDisplayer implements Servlet {
     private static final Logger LOGGER = Logger.getLogger(TopicDisplayer.class.getName());
-    private static final int MAX_TOPIC_NAME_LENGTH = 100;
-    private static final int MAX_VALUE_LENGTH = 1000;
+    //private static final int MAX_TOPIC_NAME_LENGTH = 100;
+    //private static final int MAX_VALUE_LENGTH = 1000;
     private static final int MAX_TOPICS_DISPLAY = 100;
 
     @Override
@@ -67,11 +67,11 @@ public class TopicDisplayer implements Servlet {
              //   return;
             //}
             
-            if (value.length() > MAX_VALUE_LENGTH) {
-                LOGGER.warning("Value too long: " + value.length());
-                sendErrorResponse(toClient, 400, "Bad Request", "Value too long (max " + MAX_VALUE_LENGTH + " characters)");
-                return;
-            }
+            //if (value.length() > MAX_VALUE_LENGTH) {
+            //    LOGGER.warning("Value too long: " + value.length());
+            //    sendErrorResponse(toClient, 400, "Bad Request", "Value too long (max " + MAX_VALUE_LENGTH + " characters)");
+            //    return;
+            //}
             
             // Validate topic name format
             //if (!isValidTopicName(topicName)) {
@@ -80,6 +80,12 @@ public class TopicDisplayer implements Servlet {
              //   return;
             //}
             TopicManagerSingleton.TopicManager tm = TopicManagerSingleton.get();
+            // Add this block:
+            if (tm.getTopics().isEmpty()) {
+                showTopicsTable(toClient, "Please load a configuration (graph) before publishing messages.");
+                return;
+            }
+            
             if (!tm.hasTopic(topicName)) {
                 LOGGER.warning("Topic does not exist: " + topicName);
                 showTopicsTable(toClient, "Topic does not exist: " + escapeHtml(topicName));
@@ -121,14 +127,14 @@ public class TopicDisplayer implements Servlet {
         }
     }
     
-    private boolean isValidTopicName(String topicName) {
-        if (topicName == null || topicName.trim().isEmpty()) {
-            return false;
-        }
-        
-        // Check for valid characters (alphanumeric, underscore, hyphen)
-        return topicName.matches("^[a-zA-Z0-9_-]+$");
-    }
+    //private boolean isValidTopicName(String topicName) {
+    //    if (topicName == null || topicName.trim().isEmpty()) {
+    //        return false;
+    //    }
+    //    
+     //   // Check for valid characters (alphanumeric, underscore, hyphen)
+    //    return topicName.matches("^[a-zA-Z0-9_-]+$");
+    //}
     
     private void showTopicsTable(OutputStream toClient, String message) throws IOException {
         try {
@@ -178,9 +184,10 @@ public class TopicDisplayer implements Servlet {
             
             String html = generateTopicsTableHtml(tableRows.toString());
             if (message != null && !message.isEmpty()) {
+                // Replace the default status bar with the error message
                 html = html.replace(
-                    "</div></body></html>",
-                    "<div class='status-bar' style='color:red;'>" + escapeHtml(message) + "</div></div></body></html>"
+                    "Real-time topic values updated successfully",
+                    "<span style='color:red;'>" + escapeHtml(message) + "</span>"
                 );
             }
             String response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + html;
@@ -231,9 +238,9 @@ public class TopicDisplayer implements Servlet {
         if (s == null) return "";
         
         // Limit length to prevent XSS attacks
-        if (s.length() > MAX_VALUE_LENGTH) {
-            s = s.substring(0, MAX_VALUE_LENGTH) + "...";
-        }
+        //if (s.length() > MAX_VALUE_LENGTH) {
+        //    s = s.substring(0, MAX_VALUE_LENGTH) + "...";
+        //}
         
         return s.replace("&", "&amp;")
                 .replace("<", "&lt;")

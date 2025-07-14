@@ -112,8 +112,8 @@ public class PlusAgent implements Agent {
     
         @Override
         public void reset() {
-            x = 1;
-            y = 1;
+            x = 0;
+            y = 0;
         }
     
         @Override
