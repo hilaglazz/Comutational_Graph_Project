@@ -47,11 +47,11 @@ public class TopicDisplayer implements Servlet {
             LOGGER.fine("Extracted parameters - topicName: " + topicName + ", value: " + value);
             
             // Handle refresh request
-            if ("refresh".equals(topicName)) {
-                LOGGER.fine("Handling refresh request");
-                showTopicsTable(toClient);
-                return;
-            }
+            //if ("refresh".equals(topicName)) {
+            //    LOGGER.fine("Handling refresh request");
+            //    showTopicsTable(toClient);
+            //    return;
+            //}
             
             // Validate parameters for publish request
             if (topicName == null || value == null) {
@@ -61,11 +61,11 @@ public class TopicDisplayer implements Servlet {
             }
             
             // Validate parameter lengths
-            if (topicName.length() > MAX_TOPIC_NAME_LENGTH) {
-                LOGGER.warning("Topic name too long: " + topicName.length());
-                sendErrorResponse(toClient, 400, "Bad Request", "Topic name too long (max " + MAX_TOPIC_NAME_LENGTH + " characters)");
-                return;
-            }
+            //if (topicName.length() > MAX_TOPIC_NAME_LENGTH) {
+            //    LOGGER.warning("Topic name too long: " + topicName.length());
+            //    sendErrorResponse(toClient, 400, "Bad Request", "Topic name too long (max " + MAX_TOPIC_NAME_LENGTH + " characters)");
+             //   return;
+            //}
             
             if (value.length() > MAX_VALUE_LENGTH) {
                 LOGGER.warning("Value too long: " + value.length());
@@ -74,29 +74,35 @@ public class TopicDisplayer implements Servlet {
             }
             
             // Validate topic name format
-            if (!isValidTopicName(topicName)) {
-                LOGGER.warning("Invalid topic name format: " + topicName);
-                sendErrorResponse(toClient, 400, "Bad Request", "Invalid topic name format");
+            //if (!isValidTopicName(topicName)) {
+             //   LOGGER.warning("Invalid topic name format: " + topicName);
+             //   sendErrorResponse(toClient, 400, "Bad Request", "Invalid topic name format");
+             //   return;
+            //}
+            TopicManagerSingleton.TopicManager tm = TopicManagerSingleton.get();
+            if (!tm.hasTopic(topicName)) {
+                LOGGER.warning("Topic does not exist: " + topicName);
+                showTopicsTable(toClient, "Topic does not exist: " + escapeHtml(topicName));
                 return;
             }
             
             // Publish the value to the topic
             try {
-                TopicManagerSingleton.TopicManager tm = TopicManagerSingleton.get();
-                if (tm == null) {
-                    LOGGER.severe("TopicManager is null");
-                    sendErrorResponse(toClient, 500, "Internal Server Error", "Topic manager not available");
-                    return;
-                }
+               // TopicManagerSingleton.TopicManager tm = TopicManagerSingleton.get();
+               // if (tm == null) {
+               //     LOGGER.severe("TopicManager is null");
+                //    sendErrorResponse(toClient, 500, "Internal Server Error", "Topic manager not available");
+               //     return;
+                //}
                 
                 // Get or create the topic (handles topics that don't appear in the graph)
+                //Topic topic = tm.getTopic(topicName);
+                //if (topic == null) {
+                //    LOGGER.warning("Failed to get or create topic: " + topicName);
+                //    sendErrorResponse(toClient, 500, "Internal Server Error", "Failed to get or create topic: " + escapeHtml(topicName));
+                //    return;
+                //}
                 Topic topic = tm.getTopic(topicName);
-                if (topic == null) {
-                    LOGGER.warning("Failed to get or create topic: " + topicName);
-                    sendErrorResponse(toClient, 500, "Internal Server Error", "Failed to get or create topic: " + escapeHtml(topicName));
-                    return;
-                }
-                
                 Message msg = new Message(value);
                 topic.publish(msg);
                 LOGGER.info("Message '" + value + "' published to topic '" + topicName + "'");
@@ -124,7 +130,7 @@ public class TopicDisplayer implements Servlet {
         return topicName.matches("^[a-zA-Z0-9_-]+$");
     }
     
-    private void showTopicsTable(OutputStream toClient) throws IOException {
+    private void showTopicsTable(OutputStream toClient, String message) throws IOException {
         try {
             TopicManagerSingleton.TopicManager tm = TopicManagerSingleton.get();
             if (tm == null) {
@@ -171,6 +177,12 @@ public class TopicDisplayer implements Servlet {
             }
             
             String html = generateTopicsTableHtml(tableRows.toString());
+            if (message != null && !message.isEmpty()) {
+                html = html.replace(
+                    "</div></body></html>",
+                    "<div class='status-bar' style='color:red;'>" + escapeHtml(message) + "</div></div></body></html>"
+                );
+            }
             String response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + html;
             toClient.write(response.getBytes(StandardCharsets.UTF_8));
             toClient.flush();
@@ -181,6 +193,10 @@ public class TopicDisplayer implements Servlet {
             LOGGER.log(Level.SEVERE, "Error generating topics table", e);
             sendErrorResponse(toClient, 500, "Internal Server Error", "Failed to generate topics table");
         }
+    }
+
+    private void showTopicsTable(OutputStream toClient) throws IOException {
+        showTopicsTable(toClient, null);
     }
     
     private String generateTopicsTableHtml(String tableRows) {
