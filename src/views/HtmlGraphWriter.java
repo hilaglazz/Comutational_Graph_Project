@@ -112,7 +112,7 @@ public class HtmlGraphWriter {
             return "a + b";
         } else if (agentName.toLowerCase().contains("inc") || agentName.toLowerCase().contains("increment")) {
             return "x + 1";
-        } else if (agentName.toLowerCase().contains("mult") || agentName.toLowerCase().contains("multiply")) {
+        } else if (agentName.toLowerCase().contains("mul") || agentName.toLowerCase().contains("multiply")) {
             return "a × b";
         } else if (agentName.toLowerCase().contains("div") || agentName.toLowerCase().contains("divide")) {
             return "a ÷ b";
