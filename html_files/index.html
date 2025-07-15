@@ -14,8 +14,8 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh;
+            overflow-y: auto;
         }
         
         .header {
@@ -47,7 +47,7 @@
         
         .main-container {
             display: flex;
-            height: calc(100vh - 60px);
+            /* Remove fixed height to allow panels to grow with content */
         }
         
         .panel {
@@ -71,6 +71,22 @@
         #left {
             width: 300px;
             border-right: 2px solid rgba(255,255,255,0.2);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        #left .panel-title {
+            flex: 0 0 auto;
+        }
+        #left iframe {
+            flex: 1 1 auto;
+            width: 100%;
+            border: none;
+            background: transparent;
+            margin-top: 0;
+            padding-top: 0;
+            display: block;
+            min-height: 0;
         }
         
         #center {

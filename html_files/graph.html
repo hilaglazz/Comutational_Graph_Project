@@ -221,7 +221,6 @@
             
             <div class="controls">
                 <button class="control-btn" onclick="resetZoom()">🔄 Reset Zoom</button>
-                <button class="control-btn" onclick="toggleAnimation()">⏸️ Toggle Animation</button>
                 <button class="control-btn" onclick="exportGraph()">💾 Export</button>
             </div>
             
@@ -250,7 +249,6 @@
         /*DATA_PLACEHOLDER*/
         
         let simulation;
-        let isAnimating = true;
         let zoom; // global variable
         let svg;  // global variable
         
@@ -500,21 +498,6 @@
             }
         }
 
-        function toggleAnimation() {
-            isAnimating = !isAnimating;
-            if (simulation) {
-                if (isAnimating) {
-                    simulation.alpha(1).restart();
-                } else {
-                    simulation.stop();
-                }
-            }
-            // Update button text
-            const btn = document.querySelector('.control-btn:nth-child(2)');
-            if (btn) {
-                btn.textContent = isAnimating ? '⏸️ Pause Animation' : '▶️ Resume Animation';
-            }
-        }
 
         function exportGraph() {
             try {

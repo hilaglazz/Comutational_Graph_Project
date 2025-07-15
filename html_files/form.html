@@ -158,7 +158,7 @@
         }
         
         .upload-btn {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            background: linear-gradient(135deg, #db3434 0%, #2980b9 100%);
         }
         
         .upload-btn:hover {
@@ -166,7 +166,7 @@
         }
         
         .publish-btn {
-            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            background: linear-gradient(135deg, #db3434 0%, #2980b9 100%);
         }
         
         .publish-btn:hover {
@@ -264,10 +264,20 @@
         .help-text li {
             margin-bottom: 5px;
         }
+        .main-title {
+            font-size: 2em;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 28px;
+            text-align: center;
+            letter-spacing: 0.5px;
+            margin-top: 32px; /* Increased for better visibility */
+        }
     </style>
 </head>
 <body>
     <div class="form-container">
+        <!-- If you want to export only the graph, select the relevant card or container below -->
         <!-- Configuration Upload Form -->
         <div class="form-card">
             <div class="form-title">📁 Load Configuration</div>
@@ -318,16 +328,12 @@
         </div>
 
         <!-- Quick Actions -->
-        <div class="form-card">
-            <div class="form-title">⚡ Quick Actions</div>
-            <div class="quick-actions">
-                <div class="action-buttons">
-                    <button class="action-btn" onclick="resetSystem()">🔄 Reset</button>
-                    <button class="action-btn" onclick="refreshGraph()">🔄 Refresh Graph</button>
-                    <button class="action-btn" onclick="refreshValues()">📊 Refresh Values</button>
-                    <button class="action-btn" onclick="exportGraph()">💾 Export</button>
-                    <button class="action-btn" onclick="showHelp()">❓ Help</button>
-                </div>
+        <div class="form-card" style="max-width: 350px; margin: 32px auto 0 auto; text-align: center; box-shadow: 0 2px 12px rgba(52,152,219,0.08); padding-top: 18px;">
+            <div class="quick-actions" style="margin-top: 0;">
+                <div style="color: #7f8c8d; font-size: 14px; margin-bottom: 18px;">Need help or guidance? Click below for a quick guide.</div>
+                <button class="action-btn" onclick="showHelp()" style="background: linear-gradient(135deg, #db2d2d 0%, #8e1717 100%); color: #fff; font-size: 1.1em; padding: 14px 36px; border-radius: 24px; box-shadow: 0 2px 8px rgba(52,152,219,0.10); font-weight: 600; letter-spacing: 0.5px; transition: background 0.2s, box-shadow 0.2s; margin: 0 auto; display: inline-block;">
+                     Help & Guide❓
+                </button>
             </div>
         </div>
 
@@ -468,22 +474,7 @@
                     button.textContent = '📨 Publish Message';
                 }
             }, 3000);
-        }
-        
-        // Quick action functions
-        function resetSystem() {
-            if (confirm('Are you sure you want to reset the system? This will clear all current values.')) {
-                showStatus('uploadStatus', 'System reset functionality would be implemented here.', 'info');
-            }
-        }
-        
-        function refreshGraph() {
-            const graphFrame = parent.document.getElementById('graphFrame');
-            if (graphFrame) {
-                graphFrame.src = '/graph';
-                showStatus('uploadStatus', 'Graph refreshed with latest values!', 'success');
-            }
-        }
+        } 
         
         function refreshValues() {
             const valuesFrame = parent.document.getElementById('valuesFrame');
@@ -547,9 +538,55 @@ The graph will be displayed in the center panel, and topic values will be shown 
         }
         
         // Auto-focus first input on load
-        window.addEventListener('load', function() {
-            document.getElementById('topicName').focus();
+        // window.addEventListener('load', function() {
+        //     document.getElementById('topicName').focus();
+        // });
+
+        // Listen for load events on the graphFrame to catch config errors
+        window.addEventListener('DOMContentLoaded', function() {
+            window.scrollTo(0, 0);
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
+            const graphFrame = parent.document.getElementById('graphFrame');
+            if (graphFrame) {
+                graphFrame.addEventListener('load', function() {
+                    try {
+                        // Access the iframe's document
+                        const doc = graphFrame.contentDocument || graphFrame.contentWindow.document;
+                        // Look for the configError div
+                        const errorDiv = doc.getElementById('configError');
+                        if (errorDiv) {
+                            // Show the error in the uploadStatus box
+                            const uploadStatus = document.getElementById('uploadStatus');
+                            uploadStatus.innerHTML = errorDiv.innerHTML;
+                            uploadStatus.className = 'status-message status-error';
+                            uploadStatus.style.display = 'block';
+                        }
+                    } catch (e) {
+                        // Ignore cross-origin errors or others
+                    }
+                });
+            }
         });
     </script>
+    <script>
+window.addEventListener('DOMContentLoaded', function() {
+    // Scroll to top (previous fix)
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+    // Auto-resize parent iframe if embedded
+    if (window.parent !== window) {
+        var height = document.body.scrollHeight;
+        var iframes = window.parent.document.getElementsByTagName('iframe');
+        for (var i = 0; i < iframes.length; i++) {
+            if (iframes[i].contentWindow === window) {
+                iframes[i].style.height = height + 'px';
+                break;
+            }
+        }
+    }
+});
+</script>
 </body>
 </html>

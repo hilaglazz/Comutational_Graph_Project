@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 import java.util.logging.Level;
+import java.util.HashSet;
+import java.util.Set;
 
 import graph.Agent;
 import graph.Topic;
@@ -95,119 +97,45 @@ public class Graph extends ArrayList<Node>{
                 }
             }
 
-            // Create nodes for agents and add edges from topics to agents
+            // --- Build graph: for each agent, add edges from pubs (topic → agent) and to subs (agent → topic)
+            // Collect all agents
+            Set<Agent> allAgents = new HashSet<>();
             for (Topic topic : topicManager.getTopics()) {
-                if (topic == null || topic.name == null) {
-                    continue;
-                }
-                
-                Node topicNode = nodeMap.get("T" + topic.name);
-                if (topicNode == null) {
-                    LOGGER.warning("Topic node not found for: " + topic.name);
-                    continue;
-                }
-                
-                for (Agent agent : topic.getSubscribers()) {
-                    if (agent == null) {
-                        LOGGER.warning("Found null agent in topic subscribers: " + topic.name);
-                        continue;
-                    }
-                    
-                    String agentName = agent.getName();
-                    if (agentName == null || agentName.trim().isEmpty()) {
-                        LOGGER.warning("Agent has null or empty name in topic: " + topic.name);
-                        continue;
-                    }
-                    
-                    String agentNodeName = "A" + agentName;
-                    
-                    // Check node limit
-                    if (nodeMap.size() >= MAX_NODES) {
-                        LOGGER.warning("Maximum nodes reached: " + MAX_NODES);
-                        break;
-                    }
-                    
-                    // Check if the agent node exists in the nodeMap, and create it if it doesn't
-                    Node agentNode = nodeMap.computeIfAbsent(agentNodeName, (name) -> {
-                        try {
-                            return new Node(name);
-                        } catch (Exception e) {
-                            LOGGER.log(Level.SEVERE, "Error creating agent node: " + name, e);
-                            return null;
-                        }
-                    });
-                    
-                    if (agentNode != null) {
-                        // Check edge limit
-                        if (topicNode.getEdgeCount() >= MAX_EDGES_PER_NODE) {
-                            LOGGER.warning("Maximum edges reached for node: " + topicNode.getName());
-                            continue;
-                        }
-                        
-                        // Add edge from topic to agent
-                        try {
-                            topicNode.addEdge(agentNode);
-                            LOGGER.fine("Added edge from topic " + topic.name + " to agent " + agentName);
-                        } catch (Exception e) {
-                            LOGGER.log(Level.WARNING, "Error adding edge from topic to agent", e);
-                        }
-                    }
-                }
+                allAgents.addAll(topic.getSubscribers());
+                allAgents.addAll(topic.getPublishers());
             }
-
-            // Add edges from agents to topics they publish to
-            for (Topic topic : topicManager.getTopics()) {
-                if (topic == null || topic.name == null) {
+            for (Agent agent : allAgents) {
+                if (agent == null) continue;
+                String agentName = agent.getName();
+                if (agentName == null || agentName.trim().isEmpty()) continue;
+                String agentNodeName = "A" + agentName;
+                Node agentNode = nodeMap.computeIfAbsent(agentNodeName, (name) -> {
+                    try { return new Node(name); } catch (Exception e) { return null; }
+                });
+                if (agentNode == null) continue;
+                try {
+                    // Use reflection to get pubs and subs arrays
+                    java.lang.reflect.Method getPubs = agent.getClass().getMethod("getPubs");
+                    java.lang.reflect.Method getSubs = agent.getClass().getMethod("getSubs");
+                    String[] pubs = (String[]) getPubs.invoke(agent);
+                    String[] subs = (String[]) getSubs.invoke(agent);
+                    // For each pub: topic → agent
+                    for (String pub : pubs) {
+                        Node topicNode = nodeMap.get("T" + pub);
+                        if (topicNode != null && topicNode.getEdgeCount() < MAX_EDGES_PER_NODE) {
+                            try { topicNode.addEdge(agentNode); } catch (Exception e) {}
+                        }
+                    }
+                    // For each sub: agent → topic
+                    for (String sub : subs) {
+                        Node topicNode = nodeMap.get("T" + sub);
+                        if (topicNode != null && agentNode.getEdgeCount() < MAX_EDGES_PER_NODE) {
+                            try { agentNode.addEdge(topicNode); } catch (Exception e) {}
+                        }
+                    }
+                } catch (Exception e) {
+                    // If agent does not have getPubs/getSubs, skip
                     continue;
-                }
-                
-                for (Agent agent : topic.getPublishers()) {
-                    if (agent == null) {
-                        LOGGER.warning("Found null agent in topic publishers: " + topic.name);
-                        continue;
-                    }
-                    
-                    String agentName = agent.getName();
-                    if (agentName == null || agentName.trim().isEmpty()) {
-                        LOGGER.warning("Agent has null or empty name in topic publishers: " + topic.name);
-                        continue;
-                    }
-                    
-                    String agentNodeName = "A" + agentName;
-                    
-                    // Check if the agent node exists in the nodeMap, and create it if it doesn't
-                    Node agentNode = nodeMap.computeIfAbsent(agentNodeName, (name) -> {
-                        try {
-                            return new Node(name);
-                        } catch (Exception e) {
-                            LOGGER.log(Level.SEVERE, "Error creating agent node: " + name, e);
-                            return null;
-                        }
-                    });
-
-                    if (agentNode != null) {
-                        String topicNodeName = "T" + topic.name;
-                        // Get the topic node
-                        Node topicNode = nodeMap.get(topicNodeName);
-                        
-                        if (topicNode != null) {
-                            // Check edge limit
-                            if (agentNode.getEdgeCount() >= MAX_EDGES_PER_NODE) {
-                                LOGGER.warning("Maximum edges reached for agent node: " + agentNode.getName());
-                                continue;
-                            }
-                            
-                            // Add edge from agent to topic 
-                            try {
-                                agentNode.addEdge(topicNode);
-                                LOGGER.fine("Added edge from agent " + agentName + " to topic " + topic.name);
-                            } catch (Exception e) {
-                                LOGGER.log(Level.WARNING, "Error adding edge from agent to topic", e);
-                            }
-                        } else {
-                            LOGGER.warning("Topic node not found for: " + topicNodeName);
-                        }
-                    }
                 }
             }
 

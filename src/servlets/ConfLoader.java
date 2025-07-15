@@ -177,8 +177,9 @@ public class ConfLoader implements Servlet {
                 config.create();
                 LOGGER.info("Configuration loaded successfully from: " + filePath);
             } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, "Failed to load configuration from: " + filePath, e);
-                sendErrorResponse(toClient, 500, "Internal Server Error", "Failed to load configuration: " + escapeHtml(e.getMessage()));
+                LOGGER.log(Level.WARNING, "Failed to load configuration from: " + filePath, e);
+                // Return a user-friendly error message with a recognizable marker for the frontend
+                sendErrorResponse(toClient, 400, "Invalid Configuration", "<div id='configError'>Configuration error: " + escapeHtml(e.getMessage()) + "</div>");
                 return;
             }
             
@@ -186,16 +187,17 @@ public class ConfLoader implements Servlet {
             try {
                 Graph graph = new Graph();
                 graph.createFromTopics();
-                
+                if (graph.getNodeCount() == 0) {
+                    sendErrorResponse(toClient, 400, "Invalid Configuration", "<div id='configError'>Configuration error: No valid nodes found in the configuration. Please check your file for missing or invalid agent/topic definitions.</div>");
+                    return;
+                }
                 String html = HtmlGraphWriter.getGraphHTML(graph);
                 String successResponse = "HTTP/1.1 200 OK\r\n" +
                     "Content-Type: text/html\r\n\r\n" +
                     html;
                 toClient.write(successResponse.getBytes(StandardCharsets.UTF_8));
                 toClient.flush();
-                
                 LOGGER.info("Graph visualization generated successfully");
-                
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, "Failed to generate graph visualization", e);
                 sendErrorResponse(toClient, 500, "Internal Server Error", "Failed to generate graph visualization");
@@ -254,7 +256,7 @@ public class ConfLoader implements Servlet {
         try {
             String html = String.format(
                 "<html><body><h1>%d %s</h1><p>%s</p></body></html>",
-                statusCode, statusText, escapeHtml(message)
+                statusCode, statusText, message
             );
             
             String response = String.format(

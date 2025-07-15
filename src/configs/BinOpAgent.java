@@ -11,23 +11,24 @@ import graph.TopicManagerSingleton.TopicManager;
 
 public class BinOpAgent implements Agent {
 
-	String agentName, in1Name, in2Name, outName;
+	private final String name;
+	private final String[] subs;
+	private final String[] pubs;
+	String in1Name, in2Name, outName;
 	BinaryOperator<Double> binOp;
 	private final Map<String, Double> receivedValues = new HashMap<>();
 	TopicManager topicManager;
 	
-	public BinOpAgent(String agent, String in1, String in2, String out, BinaryOperator<Double> binOp) {
-		this.agentName = agent;
-		this.in1Name = in1;
-		this.in2Name = in2;
-		this.outName = out;
-		this.binOp = binOp;
-		
-		this.topicManager =  TopicManagerSingleton.get();
-		//subscribe this agent instance to the input topics
-		this.topicManager.getTopic(this.in1Name).subscribe(this);
-		this.topicManager.getTopic(this.in2Name).subscribe(this);
-		this.topicManager.getTopic(this.outName).addPublisher(this);
+	public BinOpAgent(String name, String[] pubs, String[] subs) {
+		this.name = name;
+		this.pubs = pubs;
+		this.subs = subs;
+		for (String sub : subs) {
+			TopicManagerSingleton.get().getTopic(sub).subscribe(this);
+		}
+		for (String pub : pubs) {
+			TopicManagerSingleton.get().getTopic(pub).addPublisher(this);
+		}
 	}
 
 	@Override
@@ -61,7 +62,7 @@ public class BinOpAgent implements Agent {
 	
 	@Override
 	public String getName() {
-		return this.agentName;
+		return name;
 	}
 
 	@Override
@@ -72,7 +73,11 @@ public class BinOpAgent implements Agent {
 
 	@Override
 	public void close() {
-		this.close();
+		for (String sub : subs) {
+			TopicManagerSingleton.get().getTopic(sub).unsubscribe(this);
+		}
 	}	
     
+	public String[] getPubs() { return pubs; }
+	public String[] getSubs() { return subs; }
 }

@@ -1,66 +1,3 @@
-/* 
-package configs;
-
-import java.util.ArrayList;
-
-import test.Agent;
-import test.Message;
-import test.TopicManagerSingleton;
-import test.TopicManagerSingleton.TopicManager;
-
-public class IncAgent implements Agent {
-    ArrayList<String> subs;
-    ArrayList<String> pubs;
-    TopicManager topicManager;
-    double x = 0;
-    String name = "inc";
-
-    public IncAgent(ArrayList<String> subs, ArrayList<String> pubs) {
-        this.subs = subs;
-        this.pubs = pubs;
-        this.topicManager = TopicManagerSingleton.get();
-        this.topicManager.getTopic(subs.get(0)).subscribe(this);
-        this.topicManager.getTopic(pubs.get(0)).addPublisher(this);
-    }
-
-    @Override
-    public void callback(String topic, Message msg) {
-        // Try to parse the message as a double
-        try {
-            x = Double.parseDouble(msg.asText.trim());
-        } catch (NumberFormatException e) {
-            System.out.println("Error: invalid message format. Expected a double.");
-            return; // Ignore non-double messages
-        }
-
-        // Increment the value and publish it
-        double incValue = x + 1;
-        Message resultMessage = new Message(incValue);
-        this.topicManager.getTopic(pubs.get(0)).publish(resultMessage);
-    }
-
-    @Override
-    public String getName() {
-        return this.name;
-    }
-
-    @Override
-    public void close() {   ////////////######## check what really needs to be done here
-        this.topicManager.getTopic(this.subs.get(0)).unsubscribe(this);
-        this.topicManager.getTopic(this.pubs.get(0)).removePublisher(this);
-        // Clear lists
-        subs.clear();
-        pubs.clear();
-    }
-
-    @Override
-    public void reset() {   ////////////######## check what really needs to be done here
-        x = 0;
-    }
-
-    
-}
-*/
 package configs;
 
 import graph.Agent;
@@ -70,19 +7,25 @@ import graph.TopicManagerSingleton;
 
 public class IncAgent implements Agent {
     private double value = 0;
+    private final String name;
     private final String[] subs;
     private final String[] pubs;
 
-    public IncAgent(String[] subs, String[] pubs) {
-        this.subs = subs;
+    public IncAgent(String name, String[] pubs, String[] subs) {
+        this.name = name;
         this.pubs = pubs;
-        TopicManagerSingleton.get().getTopic(subs[0]).subscribe(this);
-        TopicManagerSingleton.get().getTopic(pubs[0]).addPublisher(this);
+        this.subs = subs;
+        for (String sub : subs) {
+            TopicManagerSingleton.get().getTopic(sub).subscribe(this);
+        }
+        for (String pub : pubs) {
+            TopicManagerSingleton.get().getTopic(pub).addPublisher(this);
+        }
     }
 
     @Override
     public String getName() {
-        return "IncAgent";
+        return name;
     }
 
     @Override
@@ -100,6 +43,11 @@ public class IncAgent implements Agent {
 
     @Override
     public void close() {
-        TopicManagerSingleton.get().getTopic(subs[0]).unsubscribe(this);
+        for (String sub : subs) {
+            TopicManagerSingleton.get().getTopic(sub).unsubscribe(this);
+        }
     }
+
+    public String[] getPubs() { return pubs; }
+    public String[] getSubs() { return subs; }
 }
