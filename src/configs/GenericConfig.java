@@ -9,7 +9,6 @@ import graph.Agent;
 import graph.ParallelAgent;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class GenericConfig implements Config {
     private String configFile = "";
