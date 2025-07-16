@@ -3,4 +3,5 @@ configs
 graph
 server
 servlets
+test
 views
