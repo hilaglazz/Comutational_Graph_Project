@@ -7,7 +7,7 @@ This project was conducted as part of an Advanced Programming course. It impleme
 ## Installation
 
 1. **Clone or download the repository** to your local machine.
-2. Make sure you have **Java 11 or higher** installed.
+2. Make sure you have **Java 21** installed.
 3. (Optional) Use an IDE like Eclipse or IntelliJ IDEA for easier project management.
 
 ## Features
@@ -41,7 +41,7 @@ java-topic-graph-server/
 
 ### Prerequisites
 
-- Java 11 or higher
+- Java 21 or higher
 - (Optional) Eclipse or IntelliJ IDEA for easier project management
 
 ### Build & Run
@@ -95,3 +95,14 @@ java-topic-graph-server/
 ## License
 
 This project is for educational purposes (Advanced Programming course). 
+
+## Demo Video
+
+[Watch the demo video here](LINK_TO_VIDEO)
+
+The video includes:
+- Opening slide with project and submitter details
+- Background story
+- Project design
+- Live demo of main features (with emphasis on Exercise 6 and advanced features)
+- Summary of what was learned 
