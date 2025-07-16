@@ -1,31 +1,27 @@
-# Java Topic Graph Server
+# Computational Graph Runner
 
-## Background
+## Overview
 
-This project was conducted as part of an Advanced Programming course. It implements a computational graph server and web-based visualization system, allowing users to upload configuration files, visualize computational graphs, and interact with them in real time. The system is designed for educational purposes and demonstrates concepts in concurrent programming, HTTP servers, and interactive data visualization.
+This project is a **Computational Graph Runner** designed for an advanced programming course assignment. It provides a server-side Java application that allows users to upload configuration files describing computational graphs, visualize and interact with these graphs via a web interface, and publish messages to topics in real time.
 
-## Installation
+### Key Features
 
-1. **Clone or download the repository** to your local machine.
-2. Make sure you have **Java 21** installed.
-3. (Optional) Use an IDE like Eclipse or IntelliJ IDEA for easier project management.
+- **Upload and parse configuration files** describing computational graphs (topics and agents).
+- **Visualize the computational graph** and monitor topic values in real time.
+- **Publish messages** to topics, triggering agent computations and graph updates.
+- **RESTful HTTP server** with custom servlet routing for extensibility.
+- **Modern, interactive web UI** for configuration, control, and monitoring.
 
-## Features
-
-- **Upload configuration files** to define computational graphs.
-- **Interactive graph visualization** using D3.js (nodes can be dragged, zoomed and dragged).
-- **Send messages to topics** and observe real-time updates in the graph.
-- **Export graph** as SVG.
-- **Modern, user-friendly web interface**.
+---
 
 ## Project Structure
 
-```
 java-topic-graph-server/
 │
 ├── bin/                # Compiled Java classes
 ├── config_files/       # Example configuration files for graphs
 ├── html_files/         # Frontend HTML files (graph visualization, forms, etc.)
+├── doc/                # Javadoc-generated documentation and resources
 ├── src/                # Java source code
 │   ├── configs/        # Configuration and graph logic
 │   ├── graph/          # Core graph and agent classes
@@ -35,74 +31,93 @@ java-topic-graph-server/
 │   └── views/          # HTML graph writer
 ├── .classpath          # Eclipse/IDEA classpath file
 ├── .project            # Eclipse project file
-```
+
+---
+
+## Main Components
+
+### 1. HTTP Server
+
+- **MyHTTPServer**: Custom multi-threaded HTTP server supporting GET, POST, DELETE, and dynamic servlet routing.
+- **RequestParser**: Parses HTTP requests, headers, parameters, and multipart file uploads.
+- **Servlets**: Each endpoint (e.g., `/upload`, `/publish`, `/app/`) is handled by a specific servlet class.
+
+### 2. Servlets
+
+- **ConfLoader**: Handles POST requests to `/upload`, saves and parses configuration files, builds the computational graph, and returns a visualization.
+- **HtmlLoader**: Serves static HTML, CSS, JS, and text files for the web UI.
+- **TopicDisplayer**: Handles GET requests to `/publish` (publishing messages to topics) and `/topic-values` (returns current topic values as JSON or HTML).
+
+### 3. Computational Graph
+
+- **Graph/Node**: Represents the computational graph as nodes (topics and agents) and edges (subscriptions/publications).
+- **Agent**: Interface for computational units (e.g., PlusAgent, MulAgent, IncAgent, BinOpAgent, IncAgent).
+- **Topic**: Represents a named channel for message passing; supports publish/subscribe.
+- **Message**: Encapsulates data sent between topics and agents.
+- **TopicManagerSingleton**: Manages all topics globally, ensuring unique topic instances.
+
+### 4. Configuration
+
+- **GenericConfig**: Loads and validates configuration files, instantiates agents and topics, and builds the graph.
+- **Config**: Interface for configuration objects.
+
+### 5. Web UI
+
+- **index.html**: Main dashboard with panels for configuration upload, graph visualization, and real-time value monitoring.
+- **form.html**: Upload form for configuration files and message publishing form.
+- **temp.html**: Welcome and instructions page.
+- **graph.html**: (If present) Used for graph visualization.
+
+---
 
 ## Getting Started
 
-### Prerequisites
+### Installation
 
-- Java 21 or higher
-- (Optional) Eclipse or IntelliJ IDEA for easier project management
+1. Clone or download the repository to your local machine.
+2. Make sure you have Java 24 installed.
 
-### Build & Run
+### Running the Server
 
-1. **Compile the project** (if not already compiled):
+1. Compile the Java source code.
+2. Run the `test.Main` class (e.g., `java test.Main`).
+3. The server starts on `localhost:8080`.
 
-   ```sh
-   javac -d bin src/**/*.java
-   ```
+### Web Interface
 
-2. **Run the server:**
+- Open `http://localhost:8080/app/index.html` in your browser.
+- Use the left panel to upload a configuration file (`.conf` or `.txt`).
+- The center panel visualizes the computational graph.
+- The right panel displays real-time topic values.
+- Use the "Send Message" form to publish values to topics.
+- Use the Help button for quick guidance.
 
-   ```sh
-   java -cp bin test.Main
-   ```
-
-   The server will start on port 8080.
-
-3. **Open the web interface:**
-
-   - Go to [http://localhost:8080/app/graph.html](http://localhost:8080/app/graph.html) for the graph visualization.
-   - Or use [http://localhost:8080/app/index.html](http://localhost:8080/app/index.html) for the full dashboard.
-
-### Usage
-
-- **Upload a configuration file** (`.conf`) using the form on the left panel.
-- **Visualize the computational graph** in the center panel.
-- **Send messages to topics** using the form to see how the graph updates.
-- **Use the Help button** for quick guidance.
-
-### Configuration Files
-
-- Example configuration files are provided in the `config_files/` directory.
-- The format describes topics, agents, and their connections.
-
-### Project Components
-
-- **Java Backend:** Handles HTTP requests, file uploads, and serves the graph data.
-- **Frontend (HTML + D3.js):** Renders the graph and provides user controls.
-
-## Customization
-
-- Modify `html_files/graph.html` for visualization tweaks.
-- Add or edit configuration files in `config_files/`.
-
-## Troubleshooting
-
+### Troubleshooting
 - If nodes can't be moved, ensure the animation is running (not paused).
 - If the server doesn't start, check your Java version and classpath.
 
+---
+
+## Example Configuration
+
+Configuration files describe the agents, topics, and their connections. See the `config_files/` directory for examples.
+
+---
+
+## Extensibility
+
+- Add new agent types by implementing the `Agent` interface.
+- Add new servlets for additional endpoints.
+- Customize the web UI by editing files in `html_files/`.
+
+---
+
+## Documentation
+
+- Javadoc documentation is available in the `doc/` directory.
+
+---
+
 ## License
 
-This project is for educational purposes (Advanced Programming course). 
-
-## Demo Video
-
-[Watch the demo video here](LINK_TO_VIDEO)
-
-The video includes:
-- Opening slide with project and submitter details
-- Background story
-- Project design
-- Live demo of main features (with emphasis on Exercise 6 and advanced features)
-- Summary of what was learned 
+See `doc/legal/LICENSE` for license information. 
