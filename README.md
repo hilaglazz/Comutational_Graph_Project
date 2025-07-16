@@ -16,6 +16,7 @@ This project is a **Computational Graph Runner** designed for an advanced progra
 
 ## Project Structure
 
+```
 java-topic-graph-server/
 │
 ├── bin/                # Compiled Java classes
