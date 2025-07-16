@@ -137,7 +137,7 @@
         
         .legend {
             position: absolute;
-            top: 560px; /* moved down by 5cm (189px) from previous 55px */
+            top: 560px; 
             left: 20px;
             background: rgba(255,255,255,0.9);
             padding: 8px;
@@ -148,14 +148,14 @@
         .legend-item {
             display: flex;
             align-items: center;
-            margin: 4px 0; /* was 8px 0, make smaller */
-            font-size: 12px; /* was 14px, make smaller */
+            margin: 4px 0; 
+            font-size: 12px;
         }
         
         .legend-symbol {
-            width: 16px; /* was 20px, make smaller */
-            height: 16px; /* was 20px, make smaller */
-            margin-right: 8px; /* was 10px, make smaller */
+            width: 16px; 
+            height: 16px; 
+            margin-right: 8px; 
             border-radius: 4px;
         }
         
@@ -219,12 +219,12 @@
         <div id="graph-container">
             <svg id="graph-svg"></svg>
             
-            <div class="controls">
+            <div class="controls"> // Controls for the graph
                 <button class="control-btn" onclick="resetZoom()">🔄 Reset Zoom</button>
                 <button class="control-btn" onclick="exportGraph()">💾 Export</button>
             </div>
             
-            <div class="legend">
+            <div class="legend"> // Legend for the graph
                 <div class="legend-item">
                     <div class="legend-symbol legend-topic"></div>
                     <span>Topics (Data Storage)</span>
@@ -235,7 +235,7 @@
                 </div>
             </div>
             
-            <div class="stats" id="stats">
+            <div class="stats" id="stats"> // Statistics for the graph
                 <div class="stat-item">Nodes: <span class="stat-value" id="nodeCount">0</span></div>
                 <div class="stat-item">Links: <span class="stat-value" id="linkCount">0</span></div>
                 <div class="stat-item">Topics: <span class="stat-value" id="topicCount">0</span></div>
@@ -248,33 +248,30 @@
         // Data will be injected here by Java
         /*DATA_PLACEHOLDER*/
         
-        let simulation;
+        let simulation; // global variable
         let zoom; // global variable
         let svg;  // global variable
         
+        // Render the graph
         function renderGraph(data) {
             const container = d3.select("#graph-container");
             svg = d3.select("#graph-svg");
             
-            // Clear previous content
-            svg.html("");
+            svg.html(""); // Clear previous content
             
             if (!data || !data.nodes || data.nodes.length === 0) {
                 container.html("<div class='loading'><div class='spinner'></div>No graph data available</div>");
                 return;
             }
 
-            // Update statistics
-            updateStats(data);
+            updateStats(data); // Update statistics
 
-            const width = container.node().clientWidth;
-            const height = container.node().clientHeight;
+            const width = container.node().clientWidth; // Get the width of the container
+            const height = container.node().clientHeight; // Get the height of the container
 
-            // Create a group for all graph elements that will be transformed by zoom
-            const g = svg.append("g");
+            const g = svg.append("g"); // Create a group for all graph elements that will be transformed by zoom
 
-            // Add arrow marker
-            g.append("defs").append("marker")
+            g.append("defs").append("marker") // Add arrow marker
                 .attr("id", "arrowhead")
                 .attr("viewBox", "0 -5 10 10")
                 .attr("refX", 12)
@@ -453,15 +450,18 @@
                 node.attr("transform", d => `translate(${d.x},${d.y})`);
             });
 
+            // Drag functionality 
             function dragstarted(event, d) {
                 if (!event.active) simulation.alphaTarget(0.3).restart();
                 d.fx = d.x;
                 d.fy = d.y;
             }
+            // Drag functionality 
             function dragged(event, d) {
                 d.fx = event.x;
                 d.fy = event.y;
             }
+            // Drag functionality
             function dragended(event, d) {
                 if (!event.active) simulation.alphaTarget(0);
                 d.fx = null;
@@ -478,6 +478,7 @@
             svg.call(zoom);
         }
 
+        // Update the statistics
         function updateStats(data) {
             const topics = data.nodes.filter(n => n.type === 'topic').length;
             const agents = data.nodes.filter(n => n.type === 'agent').length;
@@ -488,7 +489,7 @@
             document.getElementById('agentCount').textContent = agents;
         }
 
-        // Control functions
+        // Reset the zoom
         function resetZoom() {
             if (svg && zoom) {
                 svg.transition().duration(750).call(
@@ -498,7 +499,7 @@
             }
         }
 
-
+        // Export the graph
         function exportGraph() {
             try {
                 const svg = d3.select("#graph-svg");
@@ -521,6 +522,7 @@
             }
         }
 
+        // Show a notification
         function showNotification(message, type) {
             const notification = document.createElement('div');
             notification.style.cssText = `
@@ -551,7 +553,7 @@
                 "<div class='loading'><div class='spinner'></div>Graph data not loaded</div>";
         }
 
-        // Polling for live updates
+        // Polling for live updates every 2 seconds
         function fetchTopicValuesAndUpdateGraph() {
             fetch('/topic-values')
                 .then(response => response.json())

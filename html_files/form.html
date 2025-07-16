@@ -277,7 +277,6 @@
 </head>
 <body>
     <div class="form-container">
-        <!-- If you want to export only the graph, select the relevant card or container below -->
         <!-- Configuration Upload Form -->
         <div class="form-card">
             <div class="form-title">📁 Load Configuration</div>
@@ -374,29 +373,36 @@
             fileWrapper.addEventListener(eventName, preventDefaults, false);
         });
         
+        // Prevent default behavior
         function preventDefaults(e) {
             e.preventDefault();
             e.stopPropagation();
         }
         
+        // Highlight the file input when dragging over it
         ['dragenter', 'dragover'].forEach(eventName => {
             fileWrapper.addEventListener(eventName, highlight, false);
         });
         
+        // Unhighlight the file input when dragging away from it
         ['dragleave', 'drop'].forEach(eventName => {
             fileWrapper.addEventListener(eventName, unhighlight, false);
         });
         
+        // Highlight the file input when dragging over it
         function highlight(e) {
             fileLabel.classList.add('dragover');
         }
         
+        // Unhighlight the file input when dragging away from it
         function unhighlight(e) {
             fileLabel.classList.remove('dragover');
         }
         
+        // Handle the drop event
         fileWrapper.addEventListener('drop', handleDrop, false);
         
+        // Handle the drop event
         function handleDrop(e) {
             const dt = e.dataTransfer;
             const files = dt.files;
@@ -407,7 +413,7 @@
             }
         }
         
-        // Form validation and submission
+        // Form validation and submission for the upload form
         document.getElementById('uploadForm').addEventListener('submit', function(e) {
             const fileInput = document.getElementById('configFile');
             if (!fileInput.files[0]) {
@@ -419,6 +425,7 @@
             }
         });
         
+        // Form validation and submission for the publish form
         document.getElementById('publishForm').addEventListener('submit', function(e) {
             const topicInput = document.getElementById('topicName');
             const messageInput = document.getElementById('messageValue');
@@ -436,6 +443,7 @@
             }
         });
         
+        // Refresh the graph after publishing
         function refreshGraphAfterPublish() {
             const graphFrame = parent.document.getElementById('graphFrame');
             if (graphFrame) {
@@ -448,6 +456,7 @@
             }
         }
         
+        // Show the status message
         function showStatus(elementId, message, type) {
             const element = document.getElementById(elementId);
             element.textContent = message;
@@ -461,7 +470,8 @@
             }
         }
         
-        function disableButton(buttonId) {
+        // Disable the button
+            function disableButton(buttonId) {
             const button = document.getElementById(buttonId);
             button.disabled = true;
             button.textContent = '⏳ Processing...';
@@ -476,6 +486,7 @@
             }, 3000);
         } 
         
+        // Refresh the values
         function refreshValues() {
             const valuesFrame = parent.document.getElementById('valuesFrame');
             if (valuesFrame) {
@@ -505,10 +516,12 @@
             }
         }
         
+        // Export the graph
         function exportGraph() {
             showStatus('uploadStatus', 'Graph export functionality would be implemented here.', 'info');
         }
         
+        // Show the help
         function showHelp() {
             alert(`Configuration & Control System Help:
 
@@ -537,11 +550,6 @@
 The graph will be displayed in the center panel, and topic values will be shown in the right panel.`);
         }
         
-        // Auto-focus first input on load
-        // window.addEventListener('load', function() {
-        //     document.getElementById('topicName').focus();
-        // });
-
         // Listen for load events on the graphFrame to catch config errors
         window.addEventListener('DOMContentLoaded', function() {
             window.scrollTo(0, 0);

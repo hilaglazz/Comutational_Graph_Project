@@ -162,13 +162,13 @@
     </style>
 </head>
 <body>
-    <div class="header">
+    <div class="header"> <!-- Header for the page -->
         <h1>⚡ Advanced Programming Project</h1>
         <p>Computational Graph Runner - Exercise 6</p>
     </div>
     
-    <div class="main-container">
-        <div id="left" class="panel">
+    <div class="main-container"> <!-- Main container for the page -->
+        <div id="left" class="panel"> 
             <div class="panel-title">🔧 Configuration & Control</div>
             <iframe src="form.html" title="Configuration Forms"></iframe>
         </div>
@@ -191,7 +191,7 @@
     </div>
 
     <script>
-        // Update current time
+        // Update current time every second
         function updateTime() {
             const now = new Date();
             document.getElementById('currentTime').textContent = 
@@ -201,7 +201,7 @@
         updateTime();
         setInterval(updateTime, 1000);
         
-        // Add loading states for iframes
+        // Add loading states for iframes every 2 seconds
         const iframes = document.querySelectorAll('iframe');
         iframes.forEach(iframe => {
             iframe.addEventListener('load', function() {
@@ -213,7 +213,7 @@
             });
         });
         
-        // Add keyboard shortcuts
+        // Add keyboard shortcuts for the page
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey || e.metaKey) {
                 switch(e.key) {
