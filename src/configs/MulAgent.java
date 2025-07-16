@@ -4,19 +4,21 @@ import graph.Agent;
 import graph.Message;
 import graph.TopicManagerSingleton;
 
-
-
+/**
+ * An agent that multiplies two input values and publishes the result.
+ */
 public class MulAgent implements Agent {
-    private double x = 0;
-    private double y = 0;
-    private final String name;
-    private final String[] subs;
-    private final String[] pubs;
+    private double x = 0; // The first input value
+    private double y = 0; // The second input value
+    private final String name; // The name of the agent
+    private final String[] subs; // The input topics (subscribers)
+    private final String[] pubs; // The output topics (publishers)
 
-    public MulAgent(String name, String[] pubs, String[] subs) {
+    // Create a MulAgent.
+    public MulAgent(String name, String[] subs, String[] pubs) {
         this.name = name;
-        this.pubs = pubs;
         this.subs = subs;
+        this.pubs = pubs;
         for (String sub : subs) {
             TopicManagerSingleton.get().getTopic(sub).subscribe(this);
         }
@@ -25,17 +27,20 @@ public class MulAgent implements Agent {
         }
     }
 
+    // Get the name of the agent
     @Override
     public String getName() {
         return name;
     }
 
+    // Reset the value of the agent
     @Override
     public void reset() {
         x = 0;
         y = 0;
     }
 
+    // Called when a message is received on a subscribed topic.
     @Override
     public void callback(String topic, Message msg) {
         if (subs[0].equals(topic)) {
@@ -49,14 +54,18 @@ public class MulAgent implements Agent {
         }
     }
 
+    // Close the agent
     @Override
     public void close() {
+        // Unsubscribe the agent from all input topics
         for (String sub : subs) {
             TopicManagerSingleton.get().getTopic(sub).unsubscribe(this);
         }
     }
 
+    // Get the output topics
     public String[] getPubs() { return pubs; }
+    // Get the input topics
     public String[] getSubs() { return subs; }
 }
     

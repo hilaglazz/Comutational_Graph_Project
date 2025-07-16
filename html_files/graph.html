@@ -373,15 +373,15 @@
                     .attr("dominant-baseline", "middle");
 
                 // Add value display for topics
-                // (REMOVED: do not show topic values)
-                // if (d.type === "topic" && d.hasValue) {
-                //     g.append("text")
-                //         .attr("class", "node-value")
-                //         .attr("x", 0)
-                //         .attr("y", d.height / 2 + 20)
-                //         .attr("text-anchor", "middle")
-                //         .text(d.displayValue);
-                // }
+                if (d.type === "topic") {
+                    g.append("text")
+                        .attr("class", "node-value")
+                        .attr("id", "topic-value-" + d.label) // Use d.label for id
+                        .attr("x", 0)
+                        .attr("y", d.height / 2 + 20)
+                        .attr("text-anchor", "middle")
+                        .text(d.value !== undefined && d.value !== null ? d.value : "");
+                }
 
                 // Add mathematical expression for agents
                 if (d.type === "agent" && d.mathematicalExpression) {
@@ -550,6 +550,21 @@
             document.getElementById("graph-container").innerHTML = 
                 "<div class='loading'><div class='spinner'></div>Graph data not loaded</div>";
         }
+
+        // Polling for live updates
+        function fetchTopicValuesAndUpdateGraph() {
+            fetch('/topic-values')
+                .then(response => response.json())
+                .then(values => {
+                    for (const [topic, value] of Object.entries(values)) {
+                        const valueText = document.getElementById('topic-value-' + topic);
+                        console.log('Updating topic:', topic, 'value:', value, 'found:', !!valueText);
+                        if (valueText) valueText.textContent = value !== null ? value : '';
+                    }
+                });
+        }
+        setInterval(fetchTopicValuesAndUpdateGraph, 2000);
+        fetchTopicValuesAndUpdateGraph();
     </script>
 </body>
 </html>

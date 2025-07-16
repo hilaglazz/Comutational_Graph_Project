@@ -4,17 +4,20 @@ import graph.Agent;
 import graph.Message;
 import graph.TopicManagerSingleton;
 
-
+/**
+ * An agent that increments its input value by 1 and publishes the result.
+ */
 public class IncAgent implements Agent {
-    private double value = 0;
-    private final String name;
-    private final String[] subs;
-    private final String[] pubs;
+    private double value = 0; // The value of the agent
+    private final String name; // The name of the agent
+    private final String[] subs; // The input topics (subscribers)
+    private final String[] pubs; // The output topics (publishers)
 
-    public IncAgent(String name, String[] pubs, String[] subs) {
+    // Create an IncAgent.
+    public IncAgent(String name, String[] subs, String[] pubs) {
         this.name = name;
-        this.pubs = pubs;
         this.subs = subs;
+        this.pubs = pubs;
         for (String sub : subs) {
             TopicManagerSingleton.get().getTopic(sub).subscribe(this);
         }
@@ -23,16 +26,19 @@ public class IncAgent implements Agent {
         }
     }
 
+    // Get the name of the agent
     @Override
     public String getName() {
         return name;
     }
 
+    // Reset the value of the agent
     @Override
     public void reset() {
         value = 0;
     }
 
+    // Called when a message is received on a subscribed topic.
     @Override
     public void callback(String topic, Message msg) {
         value = msg.asDouble;
@@ -41,6 +47,7 @@ public class IncAgent implements Agent {
         }
     }
 
+    // Close the agent
     @Override
     public void close() {
         for (String sub : subs) {
@@ -48,6 +55,8 @@ public class IncAgent implements Agent {
         }
     }
 
+    // Get the output topics
     public String[] getPubs() { return pubs; }
+    // Get the input topics
     public String[] getSubs() { return subs; }
 }

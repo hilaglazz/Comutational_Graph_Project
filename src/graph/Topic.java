@@ -3,198 +3,180 @@ package graph;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.logging.Logger;
-import java.util.logging.Level;
 
+/**
+ * Represents a topic in the computational graph system.
+ * Topics are used to publish and subscribe to messages.
+ */
 public class Topic {
-    private static final Logger LOGGER = Logger.getLogger(Topic.class.getName());
-    private static final int MAX_SUBSCRIBERS = 1000;
-    private static final int MAX_PUBLISHERS = 1000;
+    private static final int MAX_SUBSCRIBERS = 1000; // Maximum number of subscribers
+    private static final int MAX_PUBLISHERS = 1000; // Maximum number of publishers
     
-    public final String name;
-    private final CopyOnWriteArrayList<Agent> subs = new CopyOnWriteArrayList<>();
-    private final CopyOnWriteArrayList<Agent> pubs = new CopyOnWriteArrayList<>();
+    public final String name; // The name of the topic
+    private final CopyOnWriteArrayList<Agent> subs = new CopyOnWriteArrayList<>(); // The subscribers of the topic
+    private final CopyOnWriteArrayList<Agent> pubs = new CopyOnWriteArrayList<>(); // The publishers of the topic
     
-    private volatile Message latestMessage = null;
+    private volatile Message latestMessage = null; // The latest message published to the topic
     
+    // Constructor
     Topic(String name){
         if (name == null) {
             throw new IllegalArgumentException("Topic name cannot be null");
         }
-        if (name.trim().isEmpty()) {
+        if (name.trim().isEmpty()) { // If the topic name is empty
             throw new IllegalArgumentException("Topic name cannot be empty");
         }
-        this.name = name;
-        LOGGER.fine("Topic created: " + name);
+        this.name = name; // Set the name of the topic
     }
 
+    // Subscribe an agent to the topic
     public void subscribe(Agent a){
-        if (a == null) {
-            LOGGER.warning("Attempted to subscribe null agent to topic: " + name);
+        if (a == null) { // If the agent is null
             throw new IllegalArgumentException("Agent cannot be null");
         }
         
-        if (subs.size() >= MAX_SUBSCRIBERS) {
-            LOGGER.warning("Maximum subscribers reached for topic: " + name);
+        if (subs.size() >= MAX_SUBSCRIBERS) { // If the number of subscribers is greater than the maximum number of subscribers
             throw new IllegalStateException("Maximum subscribers reached: " + MAX_SUBSCRIBERS);
         }
         
-        if (subs.contains(a)) {
-            LOGGER.fine("Agent already subscribed to topic: " + name);
+        if (subs.contains(a)) { // If the agent is already subscribed to the topic
             return;
         }
         
         try {
-            subs.add(a);
-            LOGGER.fine("Agent subscribed to topic: " + name + ", total subscribers: " + subs.size());
+            subs.add(a); // Add the agent to the subscribers list
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error subscribing agent to topic: " + name, e);
             throw new RuntimeException("Error subscribing agent to topic: " + name, e);
         }
     }
     
+    // Unsubscribe an agent from the topic
     public void unsubscribe(Agent a){
-        if (a == null) {
-            LOGGER.warning("Attempted to unsubscribe null agent from topic: " + name);
+        if (a == null) { // If the agent is null
             return;
         }
         
         try {
-            boolean removed = subs.remove(a);
-            if (removed) {
-                LOGGER.fine("Agent unsubscribed from topic: " + name + ", remaining subscribers: " + subs.size());
-            } else {
-                LOGGER.fine("Agent was not subscribed to topic: " + name);
-            }
+            subs.remove(a); // Remove the agent from the subscribers list
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error unsubscribing agent from topic: " + name, e);
             throw new RuntimeException("Error unsubscribing agent from topic: " + name, e);
         }
     }
 
+    // Publish a message to the topic
     public void publish(Message m){
-        if (m == null) {
-            LOGGER.warning("Attempted to publish null message to topic: " + name);
+        if (m == null) { // If the message is null
             throw new IllegalArgumentException("Message cannot be null");
         }
         
         try {
             this.latestMessage = m; // Update latest message
-            LOGGER.fine("Message published to topic: " + name + ", subscribers: " + subs.size());
             
             // Notify all subscribers
-            for (Agent a : subs) {
+            for (Agent a : subs) { // For each subscriber
                 if (a != null) {
                     try {
-                        a.callback(this.name, m);
+                        a.callback(this.name, m); // Call the agent's callback method
                     } catch (Exception e) {
-                        LOGGER.log(Level.WARNING, "Error in agent callback for topic: " + name, e);
                         // Continue with other subscribers even if one fails
                     }
-                } else {
-                    LOGGER.warning("Null agent found in subscribers list for topic: " + name);
                 }
             }
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error publishing message to topic: " + name, e);
+        } catch (Exception e) { // If there is an error publishing the message
             throw new RuntimeException("Error publishing message to topic: " + name, e);
         }
     }
 
+    // Add a publisher to the topic
     public void addPublisher(Agent a){
-        if (a == null) {
-            LOGGER.warning("Attempted to add null publisher to topic: " + name);
+        if (a == null) { // If the agent is null
             throw new IllegalArgumentException("Publisher agent cannot be null");
         }
         
-        if (pubs.size() >= MAX_PUBLISHERS) {
-            LOGGER.warning("Maximum publishers reached for topic: " + name);
+        if (pubs.size() >= MAX_PUBLISHERS) { // If the number of publishers is greater than the maximum number of publishers
             throw new IllegalStateException("Maximum publishers reached: " + MAX_PUBLISHERS);
         }
         
-        if (pubs.contains(a)) {
-            LOGGER.fine("Agent already a publisher for topic: " + name);
+        if (pubs.contains(a)) { // If the agent is already a publisher
             return;
         }
         
         try {
-            pubs.add(a);
-            LOGGER.fine("Publisher added to topic: " + name + ", total publishers: " + pubs.size());
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error adding publisher to topic: " + name, e);
+            pubs.add(a); // Add the agent to the publishers list
+        } catch (Exception e) { // If there is an error adding the publisher
             throw new RuntimeException("Error adding publisher to topic: " + name, e);
         }
     }
 
+    // Remove a publisher from the topic
     public void removePublisher(Agent a){
-        if (a == null) {
-            LOGGER.warning("Attempted to remove null publisher from topic: " + name);
+        if (a == null) { // If the agent is null
             return;
         }
         
         try {
-            boolean removed = pubs.remove(a);
-            if (removed) {
-                LOGGER.fine("Publisher removed from topic: " + name + ", remaining publishers: " + pubs.size());
-            } else {
-                LOGGER.fine("Agent was not a publisher for topic: " + name);
-            }
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error removing publisher from topic: " + name, e);
+            pubs.remove(a); // Remove the agent from the publishers list
+        } catch (Exception e) { // If there is an error removing the publisher
             throw new RuntimeException("Error removing publisher from topic: " + name, e);
         }
     }
 
+    // Getters:
+
+    // Get the latest message published to the topic
     public Message getLatestMessage() {
         return latestMessage;
     }
     
+    // Get the subscribers of the topic
     public List<Agent> getSubscribers() {
         return Collections.unmodifiableList(subs);
     }
     
+    // Get the publishers of the topic
     public List<Agent> getPublishers() {
         return Collections.unmodifiableList(pubs);
     }
     
+    // Get the number of subscribers of the topic
     public int getSubscriberCount() {
         return subs.size();
     }
     
+    // Get the number of publishers of the topic
     public int getPublisherCount() {
         return pubs.size();
     }
     
+    // Check if the topic has subscribers
     public boolean hasSubscribers() {
         return !subs.isEmpty();
     }
     
+    // Check if the topic has publishers
     public boolean hasPublishers() {
         return !pubs.isEmpty();
     }
     
+    // Clear the subscribers of the topic
     public void clearSubscribers() {
         try {
-            int count = subs.size();
             subs.clear();
-            LOGGER.info("Cleared " + count + " subscribers from topic: " + name);
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error clearing subscribers from topic: " + name, e);
+        } catch (Exception e) { // If there is an error clearing the subscribers
             throw new RuntimeException("Error clearing subscribers from topic: " + name, e);
         }
     }
     
+    // Clear the publishers of the topic
     public void clearPublishers() {
         try {
-            int count = pubs.size();
             pubs.clear();
-            LOGGER.info("Cleared " + count + " publishers from topic: " + name);
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error clearing publishers from topic: " + name, e);
+        } catch (Exception e) { // If there is an error clearing the publishers
             throw new RuntimeException("Error clearing publishers from topic: " + name, e);
         }
     }
     
+    // Convert the topic to a string
     @Override
     public String toString() {
         return "Topic{name='" + name + "', subscribers=" + subs.size() + ", publishers=" + pubs.size() + "}";

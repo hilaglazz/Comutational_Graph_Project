@@ -8,47 +8,46 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Objects;
-import java.util.logging.Logger;
-import java.util.logging.Level;
 
 import configs.GenericConfig;
 import configs.Graph;
 import server.RequestParser.RequestInfo;
 import views.HtmlGraphWriter;
 
+/*
+ * ConfLoader is a servlet that handles the loading of configuration files.
+ * It is used to load the configuration file from the client and display the graph.
+ * It is also used to save the configuration file to the server.
+ * It is also used to display the graph.
+ * It is also used to display the configuration file.
+ */
 public class ConfLoader implements Servlet {
-    private static final Logger LOGGER = Logger.getLogger(ConfLoader.class.getName());
-    private static final int MAX_FILENAME_LENGTH = 255;
+    private static final int MAX_FILENAME_LENGTH = 255; // Maximum filename length
     private static final int MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-    private static final String[] ALLOWED_EXTENSIONS = {".conf", ".txt", ".cfg"};
-    private static final String UPLOAD_DIR = "config_files";
+    private static final String[] ALLOWED_EXTENSIONS = {".conf", ".txt", ".cfg"}; // Allowed file extensions
+    private static final String UPLOAD_DIR = "config_files"; // Upload directory
     
+    // Handle the request
     @Override
     public void handle(RequestInfo ri, OutputStream toClient) throws IOException {
         if (ri == null) {
-            LOGGER.severe("RequestInfo is null");
             sendErrorResponse(toClient, 400, "Bad Request", "Invalid request");
             return;
         }
         
         if (toClient == null) {
-            LOGGER.severe("OutputStream is null");
             throw new IllegalArgumentException("OutputStream cannot be null");
         }
         
-        LOGGER.fine("ConfLoader handling request: " + ri.getHttpCommand() + " " + ri.getUri());
-        
-        // --- NEW: Serve GET /graph for live graph refresh ---
+        // Serve GET /graph for live graph refresh
         if ("GET".equals(ri.getHttpCommand()) && "/graph".equals(ri.getUri())) {
             handleGraphRequest(toClient);
             return;
         }
-        // --- END NEW ---
         
-        try {
+        try { // Try to handle the request
             // Validate request method
             if (!"POST".equals(ri.getHttpCommand())) {
-                LOGGER.warning("Invalid HTTP method: " + ri.getHttpCommand());
                 sendErrorResponse(toClient, 405, "Method Not Allowed", "Only POST method is allowed for file upload");
                 return;
             }
@@ -56,14 +55,12 @@ public class ConfLoader implements Servlet {
             // Extract and validate parameters
             Map<String, String> params = ri.getParameters();
             if (params == null) {
-                LOGGER.warning("Parameters map is null");
                 sendErrorResponse(toClient, 400, "Bad Request", "Invalid request parameters");
                 return;
             }
             
             String filename = params.get("filename");
             if (filename == null || filename.trim().isEmpty()) {
-                LOGGER.warning("Filename parameter is missing or empty");
                 sendErrorResponse(toClient, 400, "Bad Request", "Filename parameter is required");
                 return;
             }
@@ -71,27 +68,23 @@ public class ConfLoader implements Servlet {
             // Clean and validate filename
             filename = filename.replace("\"", "").trim();
             if (filename.isEmpty()) {
-                LOGGER.warning("Filename is empty after cleaning");
                 sendErrorResponse(toClient, 400, "Bad Request", "Invalid filename");
                 return;
             }
             
             if (filename.length() > MAX_FILENAME_LENGTH) {
-                LOGGER.warning("Filename too long: " + filename.length());
                 sendErrorResponse(toClient, 400, "Bad Request", "Filename too long (max " + MAX_FILENAME_LENGTH + " characters)");
                 return;
             }
             
             // Validate file extension
             if (!isValidFileExtension(filename)) {
-                LOGGER.warning("Invalid file extension: " + filename);
                 sendErrorResponse(toClient, 400, "Bad Request", "Invalid file type. Allowed: " + String.join(", ", ALLOWED_EXTENSIONS));
                 return;
             }
             
             // Validate filename format (prevent path traversal)
             if (!isValidFilename(filename)) {
-                LOGGER.warning("Invalid filename format: " + filename);
                 sendErrorResponse(toClient, 400, "Bad Request", "Invalid filename format");
                 return;
             }
@@ -99,13 +92,11 @@ public class ConfLoader implements Servlet {
             // Validate content
             byte[] fileContent = ri.getContent();
             if (fileContent == null || fileContent.length == 0) {
-                LOGGER.warning("No file content provided");
                 sendErrorResponse(toClient, 400, "Bad Request", "No file uploaded");
                 return;
             }
             
             if (fileContent.length > MAX_FILE_SIZE) {
-                LOGGER.warning("File too large: " + fileContent.length + " bytes");
                 sendErrorResponse(toClient, 413, "Payload Too Large", "File too large (max " + (MAX_FILE_SIZE / 1024 / 1024) + "MB)");
                 return;
             }
@@ -114,37 +105,33 @@ public class ConfLoader implements Servlet {
             processFileUpload(filename, fileContent, toClient);
             
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Unexpected error in ConfLoader", e);
             sendErrorResponse(toClient, 500, "Internal Server Error", "Unexpected server error");
         }
     }
     
+    // Handle the graph request
     private void handleGraphRequest(OutputStream toClient) throws IOException {
-        try {
-            Graph graph = new Graph();
-            graph.createFromTopics();
-            String html = HtmlGraphWriter.getGraphHTML(graph);
-            String response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + html;
-            toClient.write(response.getBytes(StandardCharsets.UTF_8));
-            toClient.flush();
-            LOGGER.fine("Graph request handled successfully");
+        try { 
+            Graph graph = new Graph(); // Create a new graph    
+            graph.createFromTopics(); // Create the graph from the topics
+            String html = HtmlGraphWriter.getGraphHTML(graph); // Get the graph HTML
+            String response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + html; // Create the response
+            toClient.write(response.getBytes(StandardCharsets.UTF_8)); // Write the response to the client
+            toClient.flush(); // Flush the client
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error handling graph request", e);
             sendErrorResponse(toClient, 500, "Internal Server Error", "Failed to generate graph");
         }
     }
     
+    // Process the file upload
     private void processFileUpload(String filename, byte[] fileContent, OutputStream toClient) throws IOException {
         try {
             // Create upload directory
-            Path uploadDir = Paths.get(UPLOAD_DIR);
-            Path filePath = uploadDir.resolve(filename).normalize();
-            
-            LOGGER.fine("Processing file upload: " + filename + " (" + fileContent.length + " bytes)");
+            Path uploadDir = Paths.get(UPLOAD_DIR); // Create the upload directory
+            Path filePath = uploadDir.resolve(filename).normalize(); // Create the file path
             
             // Prevent path traversal attacks
             if (!filePath.startsWith(uploadDir)) {
-                LOGGER.warning("Path traversal attempt detected: " + filePath);
                 sendErrorResponse(toClient, 403, "Forbidden", "Invalid file path");
                 return;
             }
@@ -152,9 +139,7 @@ public class ConfLoader implements Servlet {
             // Create directory if it doesn't exist
             try {
                 Files.createDirectories(uploadDir);
-                LOGGER.fine("Upload directory created/verified: " + uploadDir);
             } catch (IOException e) {
-                LOGGER.log(Level.SEVERE, "Failed to create upload directory", e);
                 sendErrorResponse(toClient, 500, "Internal Server Error", "Failed to create upload directory");
                 return;
             }
@@ -162,53 +147,46 @@ public class ConfLoader implements Servlet {
             // Save file
             try {
                 Files.write(filePath, fileContent);
-                LOGGER.info("File saved successfully: " + filePath);
             } catch (IOException e) {
-                LOGGER.log(Level.SEVERE, "Failed to save file: " + filePath, e);
                 sendErrorResponse(toClient, 500, "Internal Server Error", "Failed to save file");
                 return;
             }
             
             // Load configuration
-            GenericConfig config = new GenericConfig();
+            GenericConfig config = new GenericConfig(); // Create a new generic config
             
-            try {
-                config.setConfFile(filePath.toString());
-                config.create();
-                LOGGER.info("Configuration loaded successfully from: " + filePath);
+            try { // Try to load the configuration
+                config.setConfFile(filePath.toString()); // Set the configuration file
+                config.create(); // Create the configuration
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Failed to load configuration from: " + filePath, e);
-                // Return a user-friendly error message with a recognizable marker for the frontend
-                sendErrorResponse(toClient, 400, "Invalid Configuration", "<div id='configError'>Configuration error: " + escapeHtml(e.getMessage()) + "</div>");
+                sendErrorResponse(toClient, 400, "Invalid Configuration", "<div id='configError'>Configuration error: " + escapeHtml(e.getMessage()) + "</div>"); // Return a user-friendly error message with a recognizable marker for the frontend
                 return;
             }
             
             // Create and display graph
-            try {
-                Graph graph = new Graph();
-                graph.createFromTopics();
-                if (graph.getNodeCount() == 0) {
+            try { // Try to create and display the graph
+                Graph graph = new Graph(); // Create a new graph
+                graph.createFromTopics(); // Create the graph from the topics
+                if (graph.getNodeCount() == 0) { // If the graph has no nodes
                     sendErrorResponse(toClient, 400, "Invalid Configuration", "<div id='configError'>Configuration error: No valid nodes found in the configuration. Please check your file for missing or invalid agent/topic definitions.</div>");
                     return;
                 }
-                String html = HtmlGraphWriter.getGraphHTML(graph);
-                String successResponse = "HTTP/1.1 200 OK\r\n" +
-                    "Content-Type: text/html\r\n\r\n" +
-                    html;
-                toClient.write(successResponse.getBytes(StandardCharsets.UTF_8));
-                toClient.flush();
-                LOGGER.info("Graph visualization generated successfully");
-            } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, "Failed to generate graph visualization", e);
+                String html = HtmlGraphWriter.getGraphHTML(graph); // Get the graph HTML
+                String successResponse = "HTTP/1.1 200 OK\r\n" + // Create the success response
+                    "Content-Type: text/html\r\n\r\n" + // Set the content type
+                    html; // Set the HTML
+                toClient.write(successResponse.getBytes(StandardCharsets.UTF_8)); // Write the success response to the client
+                toClient.flush(); // Flush the client
+            } catch (Exception e) { // If there is an error generating the graph visualization
                 sendErrorResponse(toClient, 500, "Internal Server Error", "Failed to generate graph visualization");
             }
             
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error processing file upload", e);
             sendErrorResponse(toClient, 500, "Internal Server Error", "Error processing file: " + escapeHtml(Objects.toString(e.getMessage(), "Unknown error")));
         }
     }
     
+    // Check if the file extension is valid
     private boolean isValidFileExtension(String filename) {
         if (filename == null || filename.isEmpty()) {
             return false;
@@ -223,6 +201,7 @@ public class ConfLoader implements Servlet {
         return false;
     }
     
+    // Check if the filename is valid
     private boolean isValidFilename(String filename) {
         if (filename == null || filename.trim().isEmpty()) {
             return false;
@@ -237,6 +216,7 @@ public class ConfLoader implements Servlet {
         return filename.matches("^[a-zA-Z0-9._-]+$");
     }
     
+    // Escape the HTML
     private String escapeHtml(String s) {
         if (s == null) return "";
         
@@ -252,6 +232,7 @@ public class ConfLoader implements Servlet {
                 .replace("'", "&#39;");
     }
     
+    // Send the error response
     private void sendErrorResponse(OutputStream toClient, int statusCode, String statusText, String message) throws IOException {
         try {
             String html = String.format(
@@ -271,17 +252,14 @@ public class ConfLoader implements Servlet {
             toClient.write(response.getBytes(StandardCharsets.UTF_8));
             toClient.flush();
             
-            LOGGER.fine("Error response sent: " + statusCode + " " + statusText);
-            
-        } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Failed to send error response", e);
+        } catch (IOException e) { // If there is an error sending the error response
             throw e;
         }
     }
 
+    // Close the servlet
     @Override
     public void close() throws IOException {
-        LOGGER.fine("ConfLoader servlet closed");
         // Nothing to close
     }
 } 

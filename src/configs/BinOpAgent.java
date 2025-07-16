@@ -9,20 +9,24 @@ import graph.Message;
 import graph.TopicManagerSingleton;
 import graph.TopicManagerSingleton.TopicManager;
 
+/**
+ * An agent that performs a binary operation (e.g., addition, multiplication) on two input values and publishes the result.
+ */
 public class BinOpAgent implements Agent {
 
-	private final String name;
-	private final String[] subs;
-	private final String[] pubs;
-	String in1Name, in2Name, outName;
-	BinaryOperator<Double> binOp;
+	private final String name; // The name of the agent
+	private final String[] subs; // The input topics (subscribers)
+	private final String[] pubs; // The output topics (publishers)
+	String in1Name, in2Name, outName; // The names of the input and output topics
+	BinaryOperator<Double> binOp; // The binary operation to perform
 	private final Map<String, Double> receivedValues = new HashMap<>();
-	TopicManager topicManager;
+	TopicManager topicManager; // The topic manager
 	
-	public BinOpAgent(String name, String[] pubs, String[] subs) {
+	// Create a BinOpAgent.
+	public BinOpAgent(String name, String[] subs, String[] pubs) {
 		this.name = name;
-		this.pubs = pubs;
 		this.subs = subs;
+		this.pubs = pubs;
 		for (String sub : subs) {
 			TopicManagerSingleton.get().getTopic(sub).subscribe(this);
 		}
@@ -31,6 +35,7 @@ public class BinOpAgent implements Agent {
 		}
 	}
 
+	// Called when a message is received on a subscribed topic.
 	@Override
 	public void callback(String topic, Message msg) {
 	    // Try to parse the message as a double
@@ -60,17 +65,20 @@ public class BinOpAgent implements Agent {
         }
 	}
 	
+	// Get the name of the agent
 	@Override
 	public String getName() {
 		return name;
 	}
 
+	// Reset the value of the agent
 	@Override
 	public void reset() {
 		receivedValues.put(in1Name, 0.0);
     	receivedValues.put(in2Name, 0.0);
 	}
 
+	// Close the agent
 	@Override
 	public void close() {
 		for (String sub : subs) {
@@ -78,6 +86,8 @@ public class BinOpAgent implements Agent {
 		}
 	}	
     
+	// Get the output topics
 	public String[] getPubs() { return pubs; }
+	// Get the input topics
 	public String[] getSubs() { return subs; }
 }
