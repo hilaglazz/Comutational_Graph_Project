@@ -112,6 +112,16 @@ Configuration files describe the agents, topics, and their connections. See the 
 - Customize the web UI by editing files in `html_files/`.
 
 ---
+## Demo Video
+
+[Watch the demo video here](LINK_TO_VIDEO)
+
+The video includes:
+- Opening slide with project and submitter details
+- Background story
+- Project design
+- Live demo of main features (with emphasis on Exercise 6 and advanced features)
+- Summary of what was learned 
 
 ## Documentation
 
