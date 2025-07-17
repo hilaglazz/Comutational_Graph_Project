@@ -212,9 +212,30 @@
             font-weight: bold;
             color: #3498db;
         }
+        /* Error box for configuration errors */
+        #configError {
+            background: #ffeaea;
+            border: 2px solid #e74c3c;
+            color: #c0392b;
+            padding: 18px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 30px auto;
+            max-width: 600px;
+            box-shadow: 0 4px 12px rgba(231,76,60,0.08);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        #configError::before {
+            content: "⚠️";
+            font-size: 22px;
+        }
     </style>
 </head>
 <body>
+    <div id="error-container"></div>
     <div id="graph-wrapper">
         <div id="graph-container">
             <svg id="graph-svg"></svg>
@@ -568,6 +589,48 @@
         }
         setInterval(fetchTopicValuesAndUpdateGraph, 2000);
         fetchTopicValuesAndUpdateGraph();
+
+        // Error highlighting and auto-scroll
+        window.addEventListener('DOMContentLoaded', function() {
+            var errorDiv = document.getElementById('configError');
+            if (errorDiv) {
+                errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                errorDiv.style.boxShadow = '0 0 0 4px #e74c3c55';
+                // Optionally, add a dismiss button
+                var btn = document.createElement('button');
+                btn.textContent = 'Dismiss';
+                btn.style.marginLeft = 'auto';
+                btn.style.background = '#e74c3c';
+                btn.style.color = 'white';
+                btn.style.border = 'none';
+                btn.style.borderRadius = '4px';
+                btn.style.padding = '4px 12px';
+                btn.style.cursor = 'pointer';
+                btn.onclick = function() { errorDiv.remove(); };
+                errorDiv.appendChild(btn);
+            }
+        });
+
+        // User-friendly error display: move configError to error-container and add close button
+        window.addEventListener('DOMContentLoaded', function() {
+            var configError = document.getElementById('configError');
+            if (configError) {
+                var errorContainer = document.getElementById('error-container');
+                if (errorContainer) {
+                    // Add close button
+                    var closeBtn = document.createElement('button');
+                    closeBtn.textContent = '×';
+                    closeBtn.style.cssText = 'float:right;font-size:22px;background:none;border:none;color:#b71c1c;cursor:pointer;margin-left:12px;';
+                    closeBtn.onclick = function() {
+                        errorContainer.style.display = 'none';
+                    };
+                    configError.insertBefore(closeBtn, configError.firstChild);
+                    // Move error to container
+                    errorContainer.appendChild(configError);
+                    errorContainer.style.display = 'block';
+                }
+            }
+        });
     </script>
 </body>
 </html>

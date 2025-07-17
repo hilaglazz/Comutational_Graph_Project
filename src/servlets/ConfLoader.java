@@ -236,10 +236,12 @@ public class ConfLoader implements Servlet {
     private void sendErrorResponse(OutputStream toClient, int statusCode, String statusText, String message) throws IOException {
         try {
             String html = String.format(
-                "<html><body><h1>%d %s</h1><p>%s</p></body></html>",
+                "<html><body><div id='configError' style='max-width:600px;margin:40px auto;padding:24px;background:#ffeaea;border:1px solid #e57373;border-radius:10px;color:#b71c1c;font-family:sans-serif;box-shadow:0 2px 8px rgba(0,0,0,0.07);'>"
+                + "<h2 style='margin-top:0;'>%d %s</h2>"
+                + "<div>%s</div>"
+                + "</div></body></html>",
                 statusCode, statusText, message
             );
-            
             String response = String.format(
                 "HTTP/1.1 %d %s\r\n" +
                 "Content-Type: text/html\r\n" +
@@ -248,10 +250,8 @@ public class ConfLoader implements Servlet {
                 "%s",
                 statusCode, statusText, html.getBytes(StandardCharsets.UTF_8).length, html
             );
-            
             toClient.write(response.getBytes(StandardCharsets.UTF_8));
             toClient.flush();
-            
         } catch (IOException e) { // If there is an error sending the error response
             throw e;
         }
