@@ -119,15 +119,15 @@ public class HtmlGraphWriter {
     private static String getAgentExpression(String agentName) {
         // Generate mathematical expression based on agent type
         if (agentName.toLowerCase().contains("plus") || agentName.toLowerCase().contains("add")) {
-            return "a + b";
+            return "x + y";
         } else if (agentName.toLowerCase().contains("inc") || agentName.toLowerCase().contains("increment")) {
             return "x + 1";
         } else if (agentName.toLowerCase().contains("mul") || agentName.toLowerCase().contains("multiply")) {
-            return "a × b";
+            return "x × y";
         } else if (agentName.toLowerCase().contains("div") || agentName.toLowerCase().contains("divide")) {
-            return "a ÷ b";
+            return "x ÷ y";
         } else if (agentName.toLowerCase().contains("sub") || agentName.toLowerCase().contains("subtract")) {
-            return "a - b";
+            return "x - y";
         } else {
             return "f(x)";
         }
