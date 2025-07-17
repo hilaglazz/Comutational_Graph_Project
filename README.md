@@ -32,7 +32,7 @@ java-topic-graph-server/
 │   └── views/          # HTML graph writer
 ├── .classpath          # Eclipse/IDEA classpath file
 ├── .project            # Eclipse project file
-
+```
 ---
 
 ## Main Components
