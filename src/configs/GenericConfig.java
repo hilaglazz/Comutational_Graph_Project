@@ -40,7 +40,12 @@ public class GenericConfig implements Config {
             lines.removeIf(line -> line.trim().isEmpty());
 
             if (lines.size() % 3 != 0) { // Check if the number of lines is divisible by 3
-                throw new IllegalArgumentException("Malformed config: Each agent must have 3 lines (class, pubs, subs). Found " + lines.size() + " lines.");
+                int blockStart = (lines.size() / 3) * 3 + 1;
+                int rem = lines.size() % 3;
+                throw new IllegalArgumentException(
+                    "Malformed config: Agent block starting at line " + blockStart +
+                    " is incomplete. The class, pubs, and subs lines are required. Found only "+ rem + " line in this block. Please check your file format."
+                );
             }
 
             java.util.Map<String, Integer> agentTypeCounts = new java.util.HashMap<>(); // Create a map to count the number of each agent type
