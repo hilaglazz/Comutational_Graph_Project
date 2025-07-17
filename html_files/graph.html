@@ -624,9 +624,9 @@
                     closeBtn.onclick = function() {
                         errorContainer.style.display = 'none';
                     };
-                    configError.insertBefore(closeBtn, configError.firstChild);
-                    // Move error to container
-                    errorContainer.appendChild(configError);
+                    // Insert close button at the start of the error HTML
+                    var errorHtml = closeBtn.outerHTML + configError.innerHTML;
+                    errorContainer.innerHTML = errorHtml;
                     errorContainer.style.display = 'block';
                 }
             }

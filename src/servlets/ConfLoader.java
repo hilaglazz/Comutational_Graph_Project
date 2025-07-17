@@ -159,7 +159,8 @@ public class ConfLoader implements Servlet {
                 config.setConfFile(filePath.toString()); // Set the configuration file
                 config.create(); // Create the configuration
             } catch (Exception e) {
-                sendErrorResponse(toClient, 400, "Invalid Configuration", "<div id='configError'>Configuration error: " + escapeHtml(e.getMessage()) + "</div>"); // Return a user-friendly error message with a recognizable marker for the frontend
+                // Do NOT escape HTML here, so <br> is rendered as line breaks
+                sendErrorResponse(toClient, 400, "Invalid Configuration", "<div id='configError'>Configuration error: " + e.getMessage() + "</div>");
                 return;
             }
             

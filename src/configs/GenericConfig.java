@@ -39,12 +39,17 @@ public class GenericConfig implements Config {
             List<String> lines = Files.readAllLines(Paths.get(configFile));
             lines.removeIf(line -> line.trim().isEmpty());
 
-            if (lines.size() % 3 != 0) { // Check if the number of lines is divisible by 3
-                int blockStart = (lines.size() / 3) * 3 + 1;
-                int rem = lines.size() % 3;
+            // Handle the case where missing part of the block
+            if (lines.size() % 3 != 0) { 
+                int blockStart = (lines.size() / 3) * 3 + 1; // Get the start of the block that is not complete
+                int rem = 3 - lines.size() % 3; // Get the number of lines that are missing
                 throw new IllegalArgumentException(
-                    "Malformed config: Agent block starting at line " + blockStart +
-                    " is incomplete. The class, pubs, and subs lines are required. Found only "+ rem + " line in this block. Please check your file format."
+                    ("Malformed config: Agent block starting at line " + blockStart + " is incomplete. This block is missing " + rem + " line(s).<br>" +
+                    "Each agent block must have exactly 3 lines in this order:<br>" +
+                    "  1. Agent class name<br>" +
+                    "  2. Subscribers (input topics)<br>" +
+                    "  3. Publishers (output topics)<br>" +
+                    "Please check your file format and ensure all required lines are present.")
                 );
             }
 
