@@ -76,12 +76,18 @@ java-topic-graph-server/
 ### Installation
 
 1. Clone or download the repository to your local machine.
-2. Make sure you have Java 24 installed.
+2. Make sure you have **Java 24** installed. (Note: If you use a different version, update the code or let us know. Java 24 is required for some language features.)
 
-### Running the Server
+### Building and Running the Server
 
-1. Compile the Java source code.
-2. Run the `test.Main` class (e.g., `java test.Main`).
+1. **Compile the Java source code:**
+   ```sh
+   javac -d bin src/configs/*.java src/graph/*.java src/server/*.java src/servlets/*.java src/views/*.java src/test/*.java
+   ```
+2. **Run the server:**
+   ```sh
+   java -cp bin test.Main
+   ```
 3. The server starts on `localhost:8080`.
 
 ### Web Interface
@@ -101,7 +107,25 @@ java-topic-graph-server/
 
 ## Example Configuration
 
-Configuration files describe the agents, topics, and their connections. See the `config_files/` directory for examples.
+A configuration file describes the agents, topics, and their connections. Each agent block must have exactly 3 lines:
+
+```
+AP_ex6.src.configs.MulAgent
+A,B
+C
+AP_ex6.src.configs.PlusAgent
+C,D
+E
+AP_ex6.src.configs.IncAgent
+E
+F
+```
+
+- **Line 1:** Agent class name (e.g., `AP_ex6.src.configs.MulAgent`)
+- **Line 2:** Subscribers (input topics, comma-separated)
+- **Line 3:** Publishers (output topics, comma-separated)
+
+See the `config_files/` directory for more examples.
 
 ---
 
@@ -127,4 +151,3 @@ The video includes:
 
 - Javadoc documentation is available in the `doc/` directory.
 
---- 

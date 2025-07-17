@@ -32,17 +32,19 @@ public class HtmlLoader implements Servlet {
         this.baseDir = baseDir.trim(); // Set the base directory
     }
 
+    // Handle the request
     @Override
     public void handle(RequestInfo ri, OutputStream toClient) throws IOException {
+        // Check validity
         if (ri == null) {
             sendErrorResponse(toClient, 400, "Bad Request", "Invalid request");
             return;
         }
-        
         if (toClient == null) {
             throw new IllegalArgumentException("OutputStream cannot be null");
         }
         
+        // Try to serve the file
         try {
             String uri = ri.getUri(); // Get the URI
             if (uri == null) {
