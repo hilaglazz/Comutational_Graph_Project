@@ -218,13 +218,14 @@
     <div id="graph-wrapper">
         <div id="graph-container">
             <svg id="graph-svg"></svg>
-            
-            <div class="controls"> // Controls for the graph
+            <!-- Controls for the graph -->
+            <div class="controls"> 
                 <button class="control-btn" onclick="resetZoom()">🔄 Reset Zoom</button>
                 <button class="control-btn" onclick="exportGraph()">💾 Export</button>
             </div>
             
-            <div class="legend"> // Legend for the graph
+            <!-- Legend for the graph -->
+            <div class="legend"> 
                 <div class="legend-item">
                     <div class="legend-symbol legend-topic"></div>
                     <span>Topics (Data Storage)</span>
@@ -235,7 +236,8 @@
                 </div>
             </div>
             
-            <div class="stats" id="stats"> // Statistics for the graph
+            <!-- Statistics for the graph -->
+            <div class="stats" id="stats"> 
                 <div class="stat-item">Nodes: <span class="stat-value" id="nodeCount">0</span></div>
                 <div class="stat-item">Links: <span class="stat-value" id="linkCount">0</span></div>
                 <div class="stat-item">Topics: <span class="stat-value" id="topicCount">0</span></div>
@@ -247,10 +249,9 @@
     <script>
         // Data will be injected here by Java
         /*DATA_PLACEHOLDER*/
-        
-        let simulation; // global variable
-        let zoom; // global variable
-        let svg;  // global variable
+        let simulation; // Global variable
+        let zoom; // Global variable
+        let svg;  // Global variable
         
         // Render the graph
         function renderGraph(data) {
