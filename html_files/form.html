@@ -420,7 +420,7 @@
                 e.preventDefault();
                 showStatus('uploadStatus', 'Please select a configuration file.', 'error');
             } else {
-                showStatus('uploadStatus', 'Uploading configuration...', 'info');
+                showStatus('uploadStatus', 'Uploaded configuration...', 'info');
                 disableButton('uploadBtn');
             }
         });
@@ -434,7 +434,7 @@
                 e.preventDefault();
                 showStatus('publishStatus', 'Please fill in all fields.', 'error');
             } else {
-                showStatus('publishStatus', 'Publishing message...', 'info');
+                showStatus('publishStatus', 'Published message...', 'info');
                 disableButton('publishBtn');
                 // After publishing, refresh the graph to show updated values
                 setTimeout(() => {
