@@ -138,7 +138,7 @@ See the `config_files/` directory for more examples.
 ---
 ## Demo Video
 
-[Watch the demo video here](LINK_TO_VIDEO)
+[Watch the demo video here](https://drive.google.com/file/d/1Nl1WpGMUeZXf3d18gsABoDIeE9JwXsFt/view?usp=sharing)
 
 The video includes:
 - Opening slide with project and submitter details
