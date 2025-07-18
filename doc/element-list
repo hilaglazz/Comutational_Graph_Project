@@ -1,7 +1,6 @@
-module:Assignment6_1
+module:project
 configs
 graph
 server
 servlets
-test
 views

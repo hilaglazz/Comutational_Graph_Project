@@ -11,6 +11,7 @@ import java.util.Objects;
 
 import configs.GenericConfig;
 import configs.Graph;
+import graph.TopicManagerSingleton;
 import server.RequestParser.RequestInfo;
 import views.HtmlGraphWriter;
 
@@ -126,6 +127,8 @@ public class ConfLoader implements Servlet {
     // Process the file upload
     private void processFileUpload(String filename, byte[] fileContent, OutputStream toClient) throws IOException {
         try {
+            // Reset the topic map
+            TopicManagerSingleton.get().clear();
             // Create upload directory
             Path uploadDir = Paths.get(UPLOAD_DIR); // Create the upload directory
             Path filePath = uploadDir.resolve(filename).normalize(); // Create the file path
@@ -170,6 +173,10 @@ public class ConfLoader implements Servlet {
                 graph.createFromTopics(); // Create the graph from the topics
                 if (graph.getNodeCount() == 0) { // If the graph has no nodes
                     sendErrorResponse(toClient, 400, "Invalid Configuration", "<div id='configError'>Configuration error: No valid nodes found in the configuration. Please check your file for missing or invalid agent/topic definitions.</div>");
+                    return;
+                }
+                if (graph.hasCycles()) {
+                    sendErrorResponse(toClient, 400, "Invalid Configuration", "<div id='configError'>Configuration error: The graph contains cycles. Please provide an acyclic configuration.</div>");
                     return;
                 }
                 String html = HtmlGraphWriter.getGraphHTML(graph); // Get the graph HTML

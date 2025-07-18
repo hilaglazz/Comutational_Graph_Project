@@ -4,6 +4,6 @@
 /**
  * 
  */
-module Assignment6_1 {
+module project {
     requires java.logging;
 }

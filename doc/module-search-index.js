@@ -1,1 +1,1 @@
-moduleSearchIndex = [{"l":"Assignment6_1"}];updateSearchResults();
+moduleSearchIndex = [{"l":"project"}];updateSearchResults();
