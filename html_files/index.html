@@ -236,6 +236,12 @@
                 }
             }
         });
+
+        const graphFrame = document.getElementById('graphFrame');
+        const valuesFrame = document.getElementById('valuesFrame');
+        graphFrame.addEventListener('load', function() {
+            valuesFrame.src = 'temp.html';
+        });
     </script>
 </body>
 </html>
