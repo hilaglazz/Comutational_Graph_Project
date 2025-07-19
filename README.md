@@ -140,6 +140,8 @@ See the `config_files/` directory for more examples.
 
 [Watch the demo video here](https://drive.google.com/file/d/1Nl1WpGMUeZXf3d18gsABoDIeE9JwXsFt/view?usp=sharing)
 
+- [View the project presentation here](<https://drive.google.com/file/d/1K6NAUuYBiENq9WyinKuBg69vtF1qkWtK/view?usp=sharing>)
+
 The video includes:
 - Opening slide with project and submitter details
 - Background story
