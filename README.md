@@ -75,7 +75,10 @@ java-topic-graph-server/
 
 ### Installation
 
-1. Clone or download the repository to your local machine.
+1. Clone or download the repository to your local machine:
+   ```sh
+   git clone https://github.com/hilaglazz/Comutational_Graph_Project.git
+   ```
 2. Make sure you have **Java 24** installed. (Note: If you use a different version, update the code or let us know. Java 24 is required for some language features.)
 
 ### Building and Running the Server
